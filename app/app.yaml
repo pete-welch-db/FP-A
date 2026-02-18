@@ -1,0 +1,20 @@
+command:
+  - "streamlit"
+  - "run"
+  - "app.py"
+
+env:
+  - name: DATABRICKS_HOST
+    value: "https://adb-984752964297111.11.azuredatabricks.net"
+  - name: DATABRICKS_HTTP_PATH
+    value: "/sql/1.0/warehouses/148ccb90800933a1"
+  - name: DATABRICKS_CATALOG
+    value: "milacron_demo"
+  - name: DATABRICKS_SCHEMA
+    value: "fpa_dev"
+  - name: GENIE_SPACE_ID
+    value: ""
+  - name: DASHBOARD_EMBED_URL
+    value: ""
+  - name: USE_MOCK_DATA
+    value: "false"

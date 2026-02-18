@@ -1,0 +1,125 @@
+bundle:
+  name: milacron-fpa-demo
+
+variables:
+  catalog:
+    default: milacron_demo
+  schema:
+    default: fpa
+  warehouse_id:
+    description: "Serverless SQL Warehouse ID"
+    default: "148ccb90800933a1"
+
+workspace:
+  host: https://adb-984752964297111.11.azuredatabricks.net
+  profile: DEFAULT
+  root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog: milacron_demo
+      schema: fpa_dev
+  staging:
+    variables:
+      catalog: milacron_demo_staging
+      schema: fpa
+  prod:
+    mode: production
+    variables:
+      catalog: milacron_demo
+      schema: fpa
+
+include:
+  - "resources/*.yml"
+
+resources:
+  pipelines:
+    dlt_medallion:
+      name: "milacron-fpa-medallion-${bundle.target}"
+      serverless: true
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      libraries:
+        - notebook:
+            path: pipelines/dlt_medallion.py
+      photon: true
+      continuous: false
+      configuration:
+        pipeline.catalog: ${var.catalog}
+        pipeline.schema: ${var.schema}
+
+  jobs:
+    data_pipeline:
+      name: "milacron-fpa-pipeline-${bundle.target}"
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: notebooks/00_common_setup.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: generate_bronze
+          depends_on:
+            - task_key: setup
+          notebook_task:
+            notebook_path: notebooks/01_generate_bronze.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: run_dlt
+          depends_on:
+            - task_key: generate_bronze
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.dlt_medallion.id}
+
+        - task_key: ml_training
+          depends_on:
+            - task_key: run_dlt
+          notebook_task:
+            notebook_path: notebooks/03_ml_training.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: gold_metrics
+          depends_on:
+            - task_key: run_dlt
+            - task_key: ml_training
+          notebook_task:
+            notebook_path: notebooks/04_gold_metrics.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: deploy_genie
+          depends_on:
+            - task_key: gold_metrics
+          notebook_task:
+            notebook_path: scripts/deploy_genie_space.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              warehouse_id: ${var.warehouse_id}
+
+  dashboards:
+    milacron_fpa:
+      display_name: "Milacron FP&A Executive Dashboard"
+      file_path: resources/dashboards/milacron_fpa.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      embed_credentials: true
+
+  apps:
+    milacron_fpa_app:
+      name: "milacron-fpa-${bundle.target}"
+      source_code_path: app/
+      description: "Milacron FP&A Analytics Application"
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE

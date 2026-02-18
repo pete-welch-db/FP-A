@@ -1,0 +1,534 @@
+{
+  "pages": [
+    {
+      "name": "executive_pulse",
+      "displayName": "Executive Pulse",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_revenue_counter",
+            "queries": [
+              {
+                "name": "total_revenue_q",
+                "query": {
+                  "datasetName": "ds_revenue",
+                  "fields": [
+                    {
+                      "name": "revenue_usd",
+                      "expression": "SUM(`revenue_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "revenue_usd",
+                  "displayName": "Total Revenue"
+                }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "ebitda_margin_counter",
+            "queries": [
+              {
+                "name": "ebitda_margin_q",
+                "query": {
+                  "datasetName": "ds_ebitda",
+                  "fields": [
+                    {
+                      "name": "ebitda_margin",
+                      "expression": "AVG(`ebitda_margin`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "ebitda_margin",
+                  "displayName": "EBITDA Margin"
+                }
+              }
+            }
+          },
+          "position": { "x": 3, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "fcf_counter",
+            "queries": [
+              {
+                "name": "fcf_q",
+                "query": {
+                  "datasetName": "ds_cash_flow",
+                  "fields": [
+                    {
+                      "name": "fcf",
+                      "expression": "SUM(`fcf`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "fcf",
+                  "displayName": "Free Cash Flow"
+                }
+              }
+            }
+          },
+          "position": { "x": 6, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "leverage_counter",
+            "queries": [
+              {
+                "name": "leverage_q",
+                "query": {
+                  "datasetName": "ds_leverage",
+                  "fields": [
+                    {
+                      "name": "net_leverage",
+                      "expression": "AVG(`net_leverage`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "net_leverage",
+                  "displayName": "Net Leverage"
+                }
+              }
+            }
+          },
+          "position": { "x": 9, "y": 0, "width": 3, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "revenue_by_bu_bar",
+            "queries": [
+              {
+                "name": "revenue_by_bu_q",
+                "query": {
+                  "datasetName": "ds_revenue",
+                  "fields": [
+                    { "name": "business_unit", "expression": "`business_unit`" },
+                    { "name": "revenue_usd", "expression": "SUM(`revenue_usd`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": { "fieldName": "business_unit", "displayName": "Business Unit" },
+                "y": { "fieldName": "revenue_usd", "displayName": "Revenue (USD)" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "ebitda_margin_trend",
+            "queries": [
+              {
+                "name": "ebitda_trend_q",
+                "query": {
+                  "datasetName": "ds_ebitda",
+                  "fields": [
+                    { "name": "fiscal_quarter", "expression": "`fiscal_quarter`" },
+                    { "name": "ebitda_margin", "expression": "AVG(`ebitda_margin`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": { "fieldName": "fiscal_quarter", "displayName": "Quarter" },
+                "y": { "fieldName": "ebitda_margin", "displayName": "EBITDA Margin" }
+              }
+            }
+          },
+          "position": { "x": 6, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "leverage_trend_line",
+            "queries": [
+              {
+                "name": "leverage_trend_q",
+                "query": {
+                  "datasetName": "ds_leverage",
+                  "fields": [
+                    { "name": "fiscal_quarter", "expression": "`fiscal_quarter`" },
+                    { "name": "net_leverage", "expression": "AVG(`net_leverage`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": { "fieldName": "fiscal_quarter", "displayName": "Quarter" },
+                "y": { "fieldName": "net_leverage", "displayName": "Net Leverage (x)" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 6, "width": 12, "height": 4 }
+        }
+      ]
+    },
+    {
+      "name": "revenue_orders",
+      "displayName": "Revenue & Orders",
+      "layout": [
+        {
+          "widget": {
+            "name": "revenue_heatmap",
+            "queries": [
+              {
+                "name": "revenue_heatmap_q",
+                "query": {
+                  "datasetName": "ds_revenue",
+                  "fields": [
+                    { "name": "region", "expression": "`region`" },
+                    { "name": "fiscal_quarter", "expression": "`fiscal_quarter`" },
+                    { "name": "revenue_usd", "expression": "SUM(`revenue_usd`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pivot",
+              "encodings": {
+                "rows": { "fieldName": "region" },
+                "columns": { "fieldName": "fiscal_quarter" },
+                "values": { "fieldName": "revenue_usd" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "width": 6, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "book_to_bill_trend",
+            "queries": [
+              {
+                "name": "btb_q",
+                "query": {
+                  "datasetName": "ds_backlog",
+                  "fields": [
+                    { "name": "fiscal_month", "expression": "`fiscal_month`" },
+                    { "name": "book_to_bill_ratio", "expression": "AVG(`book_to_bill_ratio`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": { "fieldName": "fiscal_month", "displayName": "Month" },
+                "y": { "fieldName": "book_to_bill_ratio", "displayName": "Book-to-Bill" }
+              }
+            }
+          },
+          "position": { "x": 6, "y": 0, "width": 6, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "scenario_comparison_table",
+            "queries": [
+              {
+                "name": "scenario_q",
+                "query": {
+                  "datasetName": "ds_revenue",
+                  "fields": [
+                    { "name": "scenario_name", "expression": "`scenario_name`" },
+                    { "name": "fiscal_quarter", "expression": "`fiscal_quarter`" },
+                    { "name": "revenue_usd", "expression": "SUM(`revenue_usd`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  { "fieldName": "scenario_name", "displayName": "Scenario" },
+                  { "fieldName": "fiscal_quarter", "displayName": "Quarter" },
+                  { "fieldName": "revenue_usd", "displayName": "Revenue" }
+                ]
+              }
+            }
+          },
+          "position": { "x": 0, "y": 4, "width": 12, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "backlog_by_bu",
+            "queries": [
+              {
+                "name": "backlog_bu_q",
+                "query": {
+                  "datasetName": "ds_backlog",
+                  "fields": [
+                    { "name": "business_unit", "expression": "`business_unit`" },
+                    { "name": "backlog_value", "expression": "SUM(`backlog_value`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": { "fieldName": "business_unit", "displayName": "Business Unit" },
+                "y": { "fieldName": "backlog_value", "displayName": "Backlog Value" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 8, "width": 12, "height": 4 }
+        }
+      ]
+    },
+    {
+      "name": "working_capital_aftermarket",
+      "displayName": "Working Capital & Aftermarket",
+      "layout": [
+        {
+          "widget": {
+            "name": "dso_gauge",
+            "queries": [
+              {
+                "name": "dso_q",
+                "query": {
+                  "datasetName": "ds_working_capital",
+                  "fields": [
+                    { "name": "dso", "expression": "AVG(`dso`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": { "fieldName": "dso", "displayName": "Avg DSO (days)" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 0, "width": 4, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "dpo_gauge",
+            "queries": [
+              {
+                "name": "dpo_q",
+                "query": {
+                  "datasetName": "ds_working_capital",
+                  "fields": [
+                    { "name": "dpo", "expression": "AVG(`dpo`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": { "fieldName": "dpo", "displayName": "Avg DPO (days)" }
+              }
+            }
+          },
+          "position": { "x": 4, "y": 0, "width": 4, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "inv_turns_gauge",
+            "queries": [
+              {
+                "name": "inv_q",
+                "query": {
+                  "datasetName": "ds_working_capital",
+                  "fields": [
+                    { "name": "inventory_turns", "expression": "AVG(`inventory_turns`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": { "fieldName": "inventory_turns", "displayName": "Inventory Turns" }
+              }
+            }
+          },
+          "position": { "x": 8, "y": 0, "width": 4, "height": 2 }
+        },
+        {
+          "widget": {
+            "name": "ccc_trend",
+            "queries": [
+              {
+                "name": "ccc_q",
+                "query": {
+                  "datasetName": "ds_working_capital",
+                  "fields": [
+                    { "name": "fiscal_quarter", "expression": "`fiscal_quarter`" },
+                    { "name": "ccc", "expression": "AVG(`cash_conversion_cycle`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": { "fieldName": "fiscal_quarter", "displayName": "Quarter" },
+                "y": { "fieldName": "ccc", "displayName": "Cash Conversion Cycle (days)" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "aftermarket_mix_bar",
+            "queries": [
+              {
+                "name": "am_mix_q",
+                "query": {
+                  "datasetName": "ds_aftermarket",
+                  "fields": [
+                    { "name": "region", "expression": "`region`" },
+                    { "name": "aftermarket_mix_pct", "expression": "AVG(`aftermarket_mix_pct`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": { "fieldName": "region", "displayName": "Region" },
+                "y": { "fieldName": "aftermarket_mix_pct", "displayName": "Aftermarket Mix (%)" }
+              }
+            }
+          },
+          "position": { "x": 6, "y": 2, "width": 6, "height": 4 }
+        },
+        {
+          "widget": {
+            "name": "attach_rate_trend",
+            "queries": [
+              {
+                "name": "attach_q",
+                "query": {
+                  "datasetName": "ds_aftermarket",
+                  "fields": [
+                    { "name": "fiscal_quarter", "expression": "`fiscal_quarter`" },
+                    { "name": "service_attach_rate", "expression": "AVG(`service_attach_rate`)" }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": { "fieldName": "fiscal_quarter", "displayName": "Quarter" },
+                "y": { "fieldName": "service_attach_rate", "displayName": "Service Attach Rate" }
+              }
+            }
+          },
+          "position": { "x": 0, "y": 6, "width": 12, "height": 4 }
+        }
+      ]
+    }
+  ],
+  "datasets": [
+    {
+      "name": "ds_revenue",
+      "displayName": "Revenue Summary",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_revenue_summary WHERE scenario_name IN ('Actual', 'Budget', 'Forecast')"
+    },
+    {
+      "name": "ds_ebitda",
+      "displayName": "EBITDA Bridge",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual'"
+    },
+    {
+      "name": "ds_cash_flow",
+      "displayName": "Cash Flow Summary",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_cash_flow_summary"
+    },
+    {
+      "name": "ds_leverage",
+      "displayName": "Leverage Metrics",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_leverage_metrics"
+    },
+    {
+      "name": "ds_working_capital",
+      "displayName": "Working Capital",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_working_capital"
+    },
+    {
+      "name": "ds_aftermarket",
+      "displayName": "Aftermarket Mix",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_aftermarket_mix"
+    },
+    {
+      "name": "ds_backlog",
+      "displayName": "Order Backlog",
+      "query": "SELECT * FROM milacron_demo.fpa_dev.gold_order_backlog"
+    }
+  ]
+}
