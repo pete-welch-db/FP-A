@@ -3,6 +3,7 @@ Milacron FP&A Analytics — Application Entry Point
 Routing only: delegates to view modules via st.navigation.
 """
 import streamlit as st
+from importlib import import_module
 
 st.set_page_config(
     page_title="Milacron FP&A",
@@ -11,13 +12,17 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from views.01_executive_summary import render as exec_summary
-from views.02_revenue_deep_dive import render as revenue_dive
-from views.03_profitability import render as profitability
-from views.04_cash_and_leverage import render as cash_leverage
-from views.05_aftermarket import render as aftermarket
-from views.06_ml_forecast import render as ml_forecast
-from views.07_genie_assistant import render as genie_assistant
+def _load_render(module_name: str):
+    return import_module(module_name).render
+
+
+exec_summary = _load_render("views.01_executive_summary")
+revenue_dive = _load_render("views.02_revenue_deep_dive")
+profitability = _load_render("views.03_profitability")
+cash_leverage = _load_render("views.04_cash_and_leverage")
+aftermarket = _load_render("views.05_aftermarket")
+ml_forecast = _load_render("views.06_ml_forecast")
+genie_assistant = _load_render("views.07_genie_assistant")
 
 PAGES = {
     "Executive Summary": exec_summary,

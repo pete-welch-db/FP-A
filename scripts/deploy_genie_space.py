@@ -3,6 +3,9 @@
 # MAGIC # Deploy Genie Space
 # MAGIC Creates or updates a Genie Space backed by the gold and silver tables,
 # MAGIC with instructions and sample questions aligned to Milacron's KPIs.
+# MAGIC
+# MAGIC Uses the `/api/2.0/data-rooms/` REST API per the ai-dev-kit reference:
+# MAGIC https://github.com/databricks-solutions/ai-dev-kit
 
 # COMMAND ----------
 
@@ -16,16 +19,13 @@ warehouse_id = dbutils.widgets.get("warehouse_id")
 
 # COMMAND ----------
 
-# MAGIC %pip install --upgrade databricks-sdk
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
-
 import json
+import requests
 
-catalog = dbutils.widgets.get("catalog")
-schema = dbutils.widgets.get("schema")
-warehouse_id = dbutils.widgets.get("warehouse_id")
+host = spark.conf.get("spark.databricks.workspaceUrl")
+token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+base_url = f"https://{host}"
 
 # COMMAND ----------
 
@@ -46,8 +46,7 @@ Key definitions:
 
 When comparing scenarios, "Actual" is reported results, "Budget" is the annual operating plan, "Forecast" is the latest estimate.
 Always express currency in USD. When asked about trends, default to trailing 12 months unless specified.
-All tables are in catalog '{catalog}' and schema '{schema}'.
-"""
+All tables are in catalog '{catalog}' and schema '{schema}'."""
 
 ALL_TABLES = [
     f"{catalog}.{schema}.gold_revenue_summary",
@@ -83,16 +82,15 @@ SAMPLE_QUESTIONS = [
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Check existing Genie Spaces
+# MAGIC ## Step 1: Check for existing Genie Space
 
 # COMMAND ----------
 
-from databricks.sdk import WorkspaceClient
-
-w = WorkspaceClient()
-
 existing_space_id = None
+
 try:
+    from databricks.sdk import WorkspaceClient
+    w = WorkspaceClient()
     spaces_resp = w.genie.list_spaces()
     for space in (spaces_resp.spaces or []):
         title = space.title or ""
@@ -100,97 +98,148 @@ try:
             existing_space_id = space.space_id
             print(f"Found existing Genie Space: {existing_space_id} — {title}")
             break
+    if not existing_space_id:
+        print("No existing Milacron FP&A Genie Space found.")
 except Exception as e:
-    print(f"Could not list Genie Spaces: {e}")
+    print(f"SDK list failed, trying REST: {e}")
+    try:
+        resp = requests.get(f"{base_url}/api/2.0/data-rooms", headers=headers)
+        if resp.ok:
+            for space in resp.json().get("spaces", resp.json().get("data_rooms", [])):
+                title = space.get("display_name", space.get("title", ""))
+                if "milacron" in title.lower() and "fpa" in title.lower():
+                    existing_space_id = space.get("space_id", space.get("id"))
+                    print(f"Found existing Genie Space via REST: {existing_space_id} — {title}")
+                    break
+    except Exception as e2:
+        print(f"REST list also failed: {e2}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Inspect SDK to determine correct create method
-
-# COMMAND ----------
-
-import inspect
-
-sig = inspect.signature(w.genie.create_space)
-print(f"create_space signature: {sig}")
-print(f"Parameters: {list(sig.parameters.keys())}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Create or Update Genie Space
+# MAGIC ## Step 2: Create or Update Genie Space via /api/2.0/data-rooms/
 
 # COMMAND ----------
 
 space_id = None
 
 if existing_space_id:
-    print(f"Existing Genie Space found: {existing_space_id}")
-    space_id = existing_space_id
+    print(f"Updating existing Genie Space: {existing_space_id}")
+    update_payload = {
+        "id": existing_space_id,
+        "display_name": "Milacron FP&A Analytics",
+        "description": "Financial analytics assistant for Milacron's global plastics operations",
+        "warehouse_id": warehouse_id,
+        "table_identifiers": ALL_TABLES,
+        "run_as_type": "VIEWER",
+    }
+    resp = requests.patch(
+        f"{base_url}/api/2.0/data-rooms/{existing_space_id}",
+        headers=headers,
+        json=update_payload,
+    )
+    print(f"Update status: {resp.status_code}")
+    if resp.ok:
+        space_id = existing_space_id
+        print(f"Updated Genie Space: {space_id}")
+    else:
+        print(f"Update failed: {resp.text[:2000]}")
+        space_id = existing_space_id
 else:
-    print("Creating new Genie Space via SDK...")
+    print("Creating new Genie Space via /api/2.0/data-rooms/ ...")
+    create_payload = {
+        "display_name": "Milacron FP&A Analytics",
+        "warehouse_id": warehouse_id,
+        "table_identifiers": ALL_TABLES,
+        "description": "Financial analytics assistant for Milacron's global plastics operations",
+        "run_as_type": "VIEWER",
+    }
+    resp = requests.post(
+        f"{base_url}/api/2.0/data-rooms/",
+        headers=headers,
+        json=create_payload,
+    )
+    print(f"Create status: {resp.status_code}")
+    print(f"Create response: {resp.text[:2000]}")
 
-    table_identifiers = [{"table_name": t} for t in ALL_TABLES]
-
-    serialized_config = json.dumps({
-        "table_identifiers": table_identifiers,
-        "instructions": GENIE_INSTRUCTIONS,
-        "sample_questions": [{"question": q} for q in SAMPLE_QUESTIONS],
-    })
-
-    try:
-        result = w.genie.create_space(
-            warehouse_id=warehouse_id,
-            serialized_space=serialized_config,
-            title="Milacron FP&A Analytics",
-            description="Financial analytics assistant for Milacron's global plastics operations",
-        )
-        space_id = result.space_id
-        print(f"Created via SDK: {space_id}")
-    except Exception as e:
-        print(f"SDK create_space failed: {e}")
-        print("Trying REST API with direct body format...")
-
-        import requests
-        host = spark.conf.get("spark.databricks.workspaceUrl")
-        token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        api_url = f"https://{host}/api/2.0/genie/spaces"
-
-        payload = {
-            "title": "Milacron FP&A Analytics",
-            "description": "Financial analytics assistant for Milacron's global plastics operations",
-            "warehouse_id": warehouse_id,
-            "table_configs": table_identifiers,
-            "instructions": GENIE_INSTRUCTIONS,
-            "sample_questions": SAMPLE_QUESTIONS,
-        }
-
-        resp = requests.post(api_url, headers=headers, json=payload)
-        print(f"REST status: {resp.status_code}")
-        print(f"REST response: {resp.text[:2000]}")
-
-        if resp.ok:
-            result = resp.json()
-            space_id = result.get("space_id", result.get("id"))
-            print(f"Created via REST: {space_id}")
-        else:
-            print("Both SDK and REST failed. Printing setup for manual creation.")
-            print(f"\nWarehouse ID: {warehouse_id}")
-            print(f"Tables to add ({len(ALL_TABLES)}):")
-            for t in ALL_TABLES:
-                print(f"  - {t}")
-            space_id = "MANUAL_SETUP_REQUIRED"
-
-if space_id:
-    print(f"\nGENIE_SPACE_ID={space_id}")
+    if resp.ok:
+        result = resp.json()
+        space_id = result.get("space_id", result.get("id"))
+        print(f"Created Genie Space: {space_id}")
+    else:
+        print("REST create failed. Check response above for details.")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Output for downstream capture
+# MAGIC ## Step 3: Add sample questions via batch API
 
 # COMMAND ----------
+
+if space_id and space_id != "MANUAL_SETUP_REQUIRED":
+    print(f"Adding {len(SAMPLE_QUESTIONS)} sample questions to space {space_id}...")
+
+    actions = [
+        {
+            "action_type": "CREATE",
+            "curated_question": {
+                "data_room_id": space_id,
+                "question_text": q,
+                "question_type": "SAMPLE_QUESTION",
+            },
+        }
+        for q in SAMPLE_QUESTIONS
+    ]
+
+    resp = requests.post(
+        f"{base_url}/api/2.0/data-rooms/{space_id}/curated-questions/batch-actions",
+        headers=headers,
+        json={"actions": actions},
+    )
+    print(f"Sample questions status: {resp.status_code}")
+    if resp.ok:
+        print(f"Added {len(SAMPLE_QUESTIONS)} sample questions.")
+    else:
+        print(f"Sample questions failed: {resp.text[:1000]}")
+else:
+    print("Skipping sample questions — no space_id available.")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Step 4: Add general instruction
+
+# COMMAND ----------
+
+if space_id and space_id != "MANUAL_SETUP_REQUIRED":
+    print("Adding general instruction to Genie Space...")
+    instruction_payload = {
+        "title": "Milacron Financial Definitions & Context",
+        "content": GENIE_INSTRUCTIONS,
+        "instruction_type": "TEXT_INSTRUCTION",
+    }
+    resp = requests.post(
+        f"{base_url}/api/2.0/data-rooms/{space_id}/instructions",
+        headers=headers,
+        json=instruction_payload,
+    )
+    print(f"Instruction status: {resp.status_code}")
+    if resp.ok:
+        print("Added general instruction.")
+    else:
+        print(f"Instruction failed: {resp.text[:1000]}")
+else:
+    print("Skipping instructions — no space_id available.")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Output
+
+# COMMAND ----------
+
+if space_id:
+    print(f"\nGENIE_SPACE_ID={space_id}")
+    print(f"URL: https://{host}/genie/rooms/{space_id}")
 
 dbutils.notebook.exit(space_id or "NONE")
