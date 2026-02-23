@@ -1,9 +1,9 @@
 bundle:
-  name: milacron-fpa-demo
+  name: nova-molding-fpa-demo
 
 variables:
   catalog:
-    default: milacron_demo
+    default: nova_molding_demo
   schema:
     default: fpa
   warehouse_id:
@@ -20,16 +20,16 @@ targets:
     mode: development
     default: true
     variables:
-      catalog: milacron_demo
+      catalog: nova_molding_demo
       schema: fpa_dev
   staging:
     variables:
-      catalog: milacron_demo_staging
+      catalog: nova_molding_demo_staging
       schema: fpa
   prod:
     mode: production
     variables:
-      catalog: milacron_demo
+      catalog: nova_molding_demo
       schema: fpa
 
 include:
@@ -38,7 +38,7 @@ include:
 resources:
   pipelines:
     dlt_medallion:
-      name: "milacron-fpa-medallion-${bundle.target}"
+      name: "nova-molding-fpa-medallion-${bundle.target}"
       serverless: true
       catalog: ${var.catalog}
       schema: ${var.schema}
@@ -53,7 +53,7 @@ resources:
 
   jobs:
     data_pipeline:
-      name: "milacron-fpa-pipeline-${bundle.target}"
+      name: "nova-molding-fpa-pipeline-${bundle.target}"
       tasks:
         - task_key: setup
           notebook_task:
@@ -107,17 +107,36 @@ resources:
               warehouse_id: ${var.warehouse_id}
 
   dashboards:
-    milacron_fpa:
-      display_name: "Milacron FP&A Executive Dashboard"
-      file_path: resources/dashboards/milacron_fpa.lvdash.json
+    nova_molding_fpa:
+      display_name: "Nova Molding Systems FP&A Executive Dashboard"
+      file_path: resources/dashboards/nova_molding_fpa.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      embed_credentials: true
+    nova_molding_fpa_metrics_v2:
+      display_name: "Nova Molding Systems FP&A Executive Dashboard (Metrics V2)"
+      file_path: resources/dashboards/nova_molding_fpa_metrics_v2.lvdash.json
       warehouse_id: ${var.warehouse_id}
       embed_credentials: true
 
   apps:
-    milacron_fpa_app:
-      name: "milacron-fpa-${bundle.target}"
+    nova_molding_fpa_app:
+      name: "nova-molding-fpa-${bundle.target}"
       source_code_path: app/
-      description: "Milacron FP&A Analytics Application"
+      description: "Nova Molding Systems FP&A Analytics Application"
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+    nova_molding_fpa_lightweight_app:
+      name: "nova-molding-fpa-lightweight-${bundle.target}"
+      source_code_path: app/
+      description: "Nova Molding Systems FP&A Lightweight 5-Minute Demo"
+      config:
+        command:
+          - "streamlit"
+          - "run"
+          - "app_lightweight.py"
       resources:
         - name: sql-warehouse
           sql_warehouse:

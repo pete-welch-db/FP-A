@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Revenue Deep Dive
+Nova Molding Systems FP&A — Revenue Deep Dive
 Drill into revenue by BU, region, end-market, and scenario.
 """
 import streamlit as st

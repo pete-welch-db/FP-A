@@ -1,5 +1,5 @@
 """
-Milacron FP&A — EBITDA Bridge (Waterfall) Chart Component
+Nova Molding Systems FP&A — EBITDA Bridge (Waterfall) Chart Component
 Renders a Plotly waterfall chart for the EBITDA walk.
 """
 import plotly.graph_objects as go

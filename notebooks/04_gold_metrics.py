@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Milacron FP&A — UC Metric Views
+# MAGIC # Nova Molding Systems FP&A — UC Metric Views
 # MAGIC Creates 8 governed metric views in Unity Catalog using the
 # MAGIC `CREATE VIEW … WITH METRICS` syntax.  These metric views provide a
 # MAGIC single source of truth for KPI definitions consumed by Genie, AI/BI
@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "milacron_demo", "UC Catalog")
+dbutils.widgets.text("catalog", "nova_molding_demo", "UC Catalog")
 dbutils.widgets.text("schema", "fpa", "UC Schema")
 
 catalog = dbutils.widgets.get("catalog")

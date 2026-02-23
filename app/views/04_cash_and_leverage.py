@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Cash & Leverage
+Nova Molding Systems FP&A — Cash & Leverage
 Treasury view: FCF generation, debt trajectory, working capital efficiency.
 """
 import streamlit as st

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Milacron FP&A Demo — Generate Synthetic Bronze Data
+# MAGIC # Nova Molding Systems FP&A Demo — Generate Synthetic Bronze Data
 # MAGIC Produces OneStream-aligned CSV files and lands them in the UC Volume
 # MAGIC `/Volumes/{catalog}/{schema}/raw_landing/` so the DLT pipeline can
 # MAGIC ingest them through Auto Loader.
@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "milacron_demo", "UC Catalog")
+dbutils.widgets.text("catalog", "nova_molding_demo", "UC Catalog")
 dbutils.widgets.text("schema", "fpa", "UC Schema")
 
 catalog = dbutils.widgets.get("catalog")
@@ -61,7 +61,7 @@ def write_csv(df: pd.DataFrame, filename: str):
 
 
 def seasonal_factor(month: int) -> float:
-    """Milacron-style seasonality: Q1 ramp, Q2/Q3 peak, Q4 budget flush."""
+    """Nova Molding Systems-style seasonality: Q1 ramp, Q2/Q3 peak, Q4 budget flush."""
     factors = {
         1: 0.85, 2: 0.90, 3: 0.95, 4: 1.05, 5: 1.10, 6: 1.12,
         7: 1.08, 8: 1.05, 9: 1.02, 10: 0.98, 11: 0.92, 12: 0.88,
@@ -103,7 +103,7 @@ parent_map = {}
 for bu in BUS:
     parent_id = eid
     entities.append({
-        "entity_id": f"E{eid:04d}", "entity_name": f"Milacron {bu} Global",
+        "entity_id": f"E{eid:04d}", "entity_name": f"Nova Molding Systems {bu} Global",
         "parent_entity_id": "", "region": "Americas",
         "country": "United States", "business_unit": bu,
         "is_consolidated": True, "currency_code": "USD",
@@ -114,7 +114,7 @@ for bu in BUS:
         for country in COUNTRIES[region]:
             entities.append({
                 "entity_id": f"E{eid:04d}",
-                "entity_name": f"Milacron {bu} {country}",
+                "entity_name": f"Nova Molding Systems {bu} {country}",
                 "parent_entity_id": parent_map[bu],
                 "region": region, "country": country,
                 "business_unit": bu, "is_consolidated": False,

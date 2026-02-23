@@ -1,14 +1,20 @@
 """
-Milacron FP&A — Global Sidebar Filters
+Nova Molding Systems FP&A — Global Sidebar Filters
 Provides consistent filter controls across all app pages.
 """
 import streamlit as st
+from pathlib import Path
+
+
+_ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+_DATABRICKS_LOGO = _ASSETS_DIR / "Databricks_Logo.png"
 
 
 def render_sidebar() -> dict:
     """Render sidebar filters and return the selected values as a dict."""
     with st.sidebar:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Milacron_logo.svg/250px-Milacron_logo.svg.png", width=180)
+        st.image(str(_DATABRICKS_LOGO), width=240)
+        st.markdown("&nbsp;")
         st.markdown("---")
         st.subheader("Filters")
 
@@ -41,7 +47,7 @@ def render_sidebar() -> dict:
         )
 
         st.markdown("---")
-        st.caption("Milacron FP&A Demo — Powered by Databricks")
+        st.caption("Nova Molding Systems FP&A Demo — Powered by Databricks")
 
     return {
         "business_unit": business_unit,

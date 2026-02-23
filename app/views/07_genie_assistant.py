@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Genie Assistant
+Nova Molding Systems FP&A — Genie Assistant
 Natural-language Q&A powered by the Databricks Genie Conversations API.
 Based on the apps-cookbook.dev recipe: Chat with a Genie Space.
 """
@@ -27,7 +27,7 @@ def _display_message(message: dict):
 
 def render():
     st.title("Genie Assistant")
-    st.caption("Ask natural-language questions about Milacron's financial data")
+    st.caption("Ask natural-language questions about Nova Molding Systems's financial data")
 
     if not GENIE_SPACE_ID:
         st.warning(
@@ -56,7 +56,7 @@ def render():
             _display_message(msg)
 
     # Chat input
-    if prompt := st.chat_input("Ask a question about Milacron's financials…"):
+    if prompt := st.chat_input("Ask a question about Nova Molding Systems's financials…"):
         st.session_state.genie_messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)

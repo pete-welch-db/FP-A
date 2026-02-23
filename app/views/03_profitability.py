@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Profitability (EBITDA Bridge)
+Nova Molding Systems FP&A — Profitability (EBITDA Bridge)
 Explain margin walk: revenue → COGS → gross profit → OpEx → EBITDA.
 """
 import streamlit as st

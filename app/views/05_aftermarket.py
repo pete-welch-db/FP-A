@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Aftermarket & Service
+Nova Molding Systems FP&A — Aftermarket & Service
 Growth engine: attach rate, renewal trends, IIoT opportunities.
 """
 import streamlit as st

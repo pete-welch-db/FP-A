@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Milacron FP&A — Silver Transforms (Reference)
+# MAGIC # Nova Molding Systems FP&A — Silver Transforms (Reference)
 # MAGIC
 # MAGIC **This notebook is for reference only.**
 # MAGIC
@@ -10,7 +10,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "milacron_demo", "UC Catalog")
+dbutils.widgets.text("catalog", "nova_molding_demo", "UC Catalog")
 dbutils.widgets.text("schema", "fpa", "UC Schema")
 
 catalog = dbutils.widgets.get("catalog")

@@ -9,12 +9,14 @@ env:
   - name: DATABRICKS_HTTP_PATH
     value: "/sql/1.0/warehouses/148ccb90800933a1"
   - name: DATABRICKS_CATALOG
-    value: "milacron_demo"
+    value: "nova_molding_demo"
   - name: DATABRICKS_SCHEMA
     value: "fpa_dev"
   - name: GENIE_SPACE_ID
-    value: ""
+    value: "01f110cdec221d0d9fcb269d8b838a57"
   - name: DASHBOARD_EMBED_URL
-    value: ""
+    value: "https://adb-984752964297111.11.azuredatabricks.net/embed/dashboardsv3/01f110cc93cd1ef5bdc3ccfa33bff1a7"
+  - name: DASHBOARD_EMBED_URL_V2
+    value: "https://adb-984752964297111.11.azuredatabricks.net/embed/dashboardsv3/01f110cc93cd1ef5bdc3ccfa33bff1a7"
   - name: USE_MOCK_DATA
     value: "false"

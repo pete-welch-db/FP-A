@@ -1,5 +1,5 @@
 """
-Milacron FP&A — ML Forecast
+Nova Molding Systems FP&A — ML Forecast
 Data-driven 3-month revenue forecast with explainability.
 """
 import streamlit as st

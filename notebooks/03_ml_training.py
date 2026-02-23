@@ -1,13 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Milacron FP&A — ML Revenue Forecast
+# MAGIC # Nova Molding Systems FP&A — ML Revenue Forecast
 # MAGIC Trains a LightGBM model to predict 3-month rolling revenue by entity ×
 # MAGIC product family.  Tracks with MLflow, registers in Unity Catalog, and
 # MAGIC scores predictions back into Delta.
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "milacron_demo", "UC Catalog")
+dbutils.widgets.text("catalog", "nova_molding_demo", "UC Catalog")
 dbutils.widgets.text("schema", "fpa", "UC Schema")
 
 catalog = dbutils.widgets.get("catalog")
@@ -36,7 +36,7 @@ catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
 
 mlflow.set_registry_uri("databricks-uc")
-experiment_path = f"/Workspace/Users/{spark.sql('SELECT current_user()').collect()[0][0]}/milacron_revenue_forecast"
+experiment_path = f"/Workspace/Users/{spark.sql('SELECT current_user()').collect()[0][0]}/nova_molding_revenue_forecast"
 mlflow.set_experiment(experiment_path)
 
 # COMMAND ----------
@@ -251,7 +251,7 @@ with mlflow.start_run(run_name="lightgbm_revenue_forecast") as run:
     mlflow.lightgbm.log_model(
         model,
         artifact_path="model",
-        registered_model_name=f"{catalog}.{schema}.milacron_revenue_forecast",
+        registered_model_name=f"{catalog}.{schema}.nova_molding_revenue_forecast",
         input_example=X.head(1),
         signature=signature,
     )

@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Mock Data
+Nova Molding Systems FP&A — Mock Data
 Provides fallback DataFrames mirroring the gold table schemas so the app
 can render in demo/offline mode when USE_MOCK_DATA=true or live SQL fails.
 """
@@ -29,6 +29,9 @@ def _mock_revenue_summary() -> pd.DataFrame:
                             "fiscal_year": fy, "fiscal_quarter": q,
                             "fiscal_month": m, "scenario_name": "Actual",
                             "revenue_usd": round(rev, 2),
+                            # Keep alias parity with view SQL that selects
+                            # SUM(revenue_usd) AS revenue.
+                            "revenue": round(rev, 2),
                             "yoy_growth_pct": round(np.random.uniform(-5, 15), 1),
                             "budget_variance_pct": round(np.random.uniform(-8, 10), 1),
                         })
@@ -66,7 +69,7 @@ def _mock_cash_flow() -> pd.DataFrame:
             capex = -np.random.uniform(8, 25) * 1e6
             fcf = ocf + capex
             rows.append({
-                "entity_name": "Milacron Consolidated", "region": "Americas",
+                "entity_name": "Nova Molding Systems Consolidated", "region": "Americas",
                 "fiscal_year": fy, "fiscal_quarter": q,
                 "operating_cf": round(ocf, 2), "capex": round(capex, 2),
                 "financing_cf": round(np.random.uniform(-10, 5) * 1e6, 2),
@@ -101,7 +104,7 @@ def _mock_working_capital() -> pd.DataFrame:
                 for bu in BUS:
                     for region in REGIONS:
                         rows.append({
-                            "entity_name": f"Milacron {bu} {region}",
+                            "entity_name": f"Nova Molding Systems {bu} {region}",
                             "business_unit": bu, "region": region,
                             "fiscal_year": fy, "fiscal_quarter": q,
                             "fiscal_month": m,

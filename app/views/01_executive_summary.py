@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Executive Summary
+Nova Molding Systems FP&A — Executive Summary
 CFO-level pulse: "How are we doing this quarter vs plan?"
 """
 import streamlit as st
@@ -12,7 +12,7 @@ from components.kpi_cards import render_kpi_card, fmt_currency, fmt_pct
 
 def render():
     st.title("Executive Summary")
-    st.caption("Consolidated performance snapshot across Milacron's global operations")
+    st.caption("Consolidated performance snapshot across Nova Molding Systems's global operations")
 
     filters = render_sidebar()
     bu_filter = sql_in_list(filters["business_unit"])
@@ -80,11 +80,12 @@ def render():
     # ---- KPI Cards Row ----
     c1, c2, c3, c4, c5, c6 = st.columns(6)
 
-    total_rev = rev_df["revenue"].sum() if not rev_df.empty else 0
+    rev_col = "revenue" if "revenue" in rev_df.columns else "revenue_usd"
+    total_rev = rev_df[rev_col].sum() if (not rev_df.empty and rev_col in rev_df.columns) else 0
     with c1:
         render_kpi_card(
             "Revenue", fmt_currency(total_rev),
-            sparkline_data=rev_df["revenue"].tolist() if not rev_df.empty else None,
+            sparkline_data=rev_df[rev_col].tolist() if (not rev_df.empty and rev_col in rev_df.columns) else None,
         )
 
     ebitda_margin = ebitda_df["ebitda_margin"].mean() * 100 if not ebitda_df.empty else 0
@@ -118,9 +119,9 @@ def render():
     with col_left:
         if not rev_df.empty:
             fig = px.bar(
-                rev_df, x="fiscal_month", y="revenue",
+                rev_df, x="fiscal_month", y=rev_col,
                 title="Monthly Revenue Trend",
-                labels={"fiscal_month": "Month", "revenue": "Revenue (USD)"},
+                labels={"fiscal_month": "Month", rev_col: "Revenue (USD)"},
                 color_discrete_sequence=["#FF3621"],
             )
             fig.update_layout(template="plotly_white")

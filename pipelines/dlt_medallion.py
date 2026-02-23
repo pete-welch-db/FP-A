@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Milacron FP&A — DLT Medallion Pipeline
+# MAGIC # Nova Molding Systems FP&A — DLT Medallion Pipeline
 # MAGIC Bronze → Silver → Gold using Delta Live Tables.
 # MAGIC
 # MAGIC * **Bronze**: Auto Loader ingestion from `/Volumes/{catalog}/{schema}/raw_landing/`
@@ -14,7 +14,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
 # Pipeline parameters — set via DLT configuration or DAB variables
-CATALOG = spark.conf.get("pipeline.catalog", "milacron_demo")
+CATALOG = spark.conf.get("pipeline.catalog", "nova_molding_demo")
 SCHEMA = spark.conf.get("pipeline.schema", "fpa")
 VOLUME_PATH = f"/Volumes/{CATALOG}/{SCHEMA}/raw_landing"
 

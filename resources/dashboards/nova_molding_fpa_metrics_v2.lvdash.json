@@ -4,147 +4,147 @@
       "name": "ds_filter_year",
       "displayName": "Filter Fiscal Year",
       "queryLines": [
-        "SELECT DISTINCT fiscal_year FROM milacron_demo.fpa_dev.gold_revenue_summary ORDER BY fiscal_year DESC"
+        "SELECT DISTINCT `Fiscal Year` AS fiscal_year FROM nova_molding_demo.fpa_dev.mv_revenue ORDER BY fiscal_year DESC"
       ]
     },
     {
       "name": "ds_filter_quarter",
       "displayName": "Filter Fiscal Quarter",
       "queryLines": [
-        "SELECT DISTINCT fiscal_quarter FROM milacron_demo.fpa_dev.gold_revenue_summary ORDER BY fiscal_quarter"
+        "SELECT DISTINCT `Fiscal Quarter` AS fiscal_quarter FROM nova_molding_demo.fpa_dev.mv_revenue ORDER BY fiscal_quarter"
       ]
     },
     {
       "name": "ds_filter_bu",
       "displayName": "Filter Business Unit",
       "queryLines": [
-        "SELECT DISTINCT business_unit FROM milacron_demo.fpa_dev.gold_revenue_summary ORDER BY business_unit"
+        "SELECT DISTINCT `Business Unit` AS business_unit FROM nova_molding_demo.fpa_dev.mv_revenue ORDER BY business_unit"
       ]
     },
     {
       "name": "ds_filter_region",
       "displayName": "Filter Region",
       "queryLines": [
-        "SELECT DISTINCT region FROM milacron_demo.fpa_dev.gold_revenue_summary ORDER BY region"
+        "SELECT DISTINCT `Region` AS region FROM nova_molding_demo.fpa_dev.mv_revenue ORDER BY region"
       ]
     },
     {
       "name": "ds_rev_scenario_qtr",
       "displayName": "Revenue Scenario by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, ROUND(SUM(revenue_usd), 0) AS revenue_usd, ROUND(AVG(yoy_growth_pct), 1) AS yoy_growth_pct, ROUND(AVG(budget_variance_pct), 1) AS budget_variance_pct FROM milacron_demo.fpa_dev.gold_revenue_summary GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, ROUND(MEASURE(`Revenue`), 0) AS revenue_usd, ROUND(MEASURE(`YoY Growth Pct`), 1) AS yoy_growth_pct, ROUND(MEASURE(`Budget Variance Pct`), 1) AS budget_variance_pct FROM nova_molding_demo.fpa_dev.mv_revenue GROUP BY ALL"
       ]
     },
     {
       "name": "ds_ebitda_qtr",
       "displayName": "EBITDA by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, ROUND(SUM(revenue), 0) AS revenue, ROUND(SUM(cogs), 0) AS cogs, ROUND(SUM(gross_profit), 0) AS gross_profit, ROUND(SUM(opex), 0) AS opex, ROUND(SUM(ebitda), 0) AS ebitda, ROUND(AVG(ebitda_margin) * 100, 1) AS ebitda_margin_pct FROM milacron_demo.fpa_dev.gold_ebitda_bridge GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, ROUND(MEASURE(`Revenue`), 0) AS revenue, ROUND(MEASURE(`COGS`), 0) AS cogs, ROUND(MEASURE(`Gross Profit`), 0) AS gross_profit, ROUND(MEASURE(`OpEx`), 0) AS opex, ROUND(MEASURE(`EBITDA`), 0) AS ebitda, ROUND(MEASURE(`EBITDA Margin`) * 100, 1) AS ebitda_margin_pct FROM nova_molding_demo.fpa_dev.mv_ebitda GROUP BY ALL"
       ]
     },
     {
       "name": "ds_cash_qtr",
       "displayName": "Cash by Quarter",
       "queryLines": [
-        "SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, ROUND(SUM(c.operating_cf), 0) AS operating_cf, ROUND(SUM(c.capex), 0) AS capex, ROUND(SUM(c.fcf), 0) AS fcf, ROUND(AVG(c.fcf_conversion_pct), 1) AS fcf_conversion_pct FROM milacron_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region"
+        "SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, ROUND(SUM(c.operating_cf), 0) AS operating_cf, ROUND(SUM(c.capex), 0) AS capex, ROUND(SUM(c.fcf), 0) AS fcf, ROUND(AVG(c.fcf_conversion_pct), 1) AS fcf_conversion_pct FROM nova_molding_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region"
       ]
     },
     {
       "name": "ds_cash_metrics_long",
       "displayName": "Cash Metrics Long",
       "queryLines": [
-        "SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, 'Operating CF' AS metric, ROUND(SUM(c.operating_cf), 0) AS value FROM milacron_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region UNION ALL SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, 'CapEx' AS metric, ROUND(SUM(c.capex), 0) AS value FROM milacron_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region UNION ALL SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, 'FCF' AS metric, ROUND(SUM(c.fcf), 0) AS value FROM milacron_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region"
+        "SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, 'Operating CF' AS metric, ROUND(SUM(c.operating_cf), 0) AS value FROM nova_molding_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region UNION ALL SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, 'CapEx' AS metric, ROUND(SUM(c.capex), 0) AS value FROM nova_molding_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region UNION ALL SELECT c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, c.region, 'FCF' AS metric, ROUND(SUM(c.fcf), 0) AS value FROM nova_molding_demo.fpa_dev.gold_cash_flow_summary c LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON c.entity_name = e.entity_name AND c.region = e.region GROUP BY c.fiscal_year, c.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), c.region"
       ]
     },
     {
       "name": "ds_leverage_qtr",
       "displayName": "Leverage by Quarter",
       "queryLines": [
-        "SELECT l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, COALESCE(e.region, 'Unknown') AS region, ROUND(AVG(l.net_leverage), 2) AS net_leverage, ROUND(AVG(l.interest_coverage), 2) AS interest_coverage FROM milacron_demo.fpa_dev.gold_leverage_metrics l LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON l.entity_id = e.entity_id GROUP BY l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), COALESCE(e.region, 'Unknown')"
+        "SELECT l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, COALESCE(e.region, 'Unknown') AS region, ROUND(AVG(l.net_leverage), 2) AS net_leverage, ROUND(AVG(l.interest_coverage), 2) AS interest_coverage FROM nova_molding_demo.fpa_dev.gold_leverage_metrics l LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON l.entity_id = e.entity_id GROUP BY l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), COALESCE(e.region, 'Unknown')"
       ]
     },
     {
       "name": "ds_wc_qtr",
       "displayName": "Working Capital by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, ROUND(AVG(dso), 1) AS dso, ROUND(AVG(dpo), 1) AS dpo, ROUND(AVG(inventory_turns), 2) AS inventory_turns, ROUND(AVG(cash_conversion_cycle), 1) AS ccc FROM milacron_demo.fpa_dev.gold_working_capital GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, ROUND(MEASURE(`DSO`), 1) AS dso, ROUND(MEASURE(`DPO`), 1) AS dpo, ROUND(MEASURE(`Inventory Turns`), 2) AS inventory_turns, ROUND(MEASURE(`Cash Conversion Cycle`), 1) AS ccc FROM nova_molding_demo.fpa_dev.mv_working_capital GROUP BY ALL"
       ]
     },
     {
       "name": "ds_ebitda_bridge_steps",
       "displayName": "EBITDA Bridge Steps",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, 'Revenue' AS step, ROUND(SUM(revenue), 0) AS value FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, 'COGS' AS step, ROUND(-SUM(cogs), 0) AS value FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, 'Gross Profit' AS step, ROUND(SUM(gross_profit), 0) AS value FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, 'OpEx' AS step, ROUND(-SUM(opex), 0) AS value FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, scenario_name, 'EBITDA' AS step, ROUND(SUM(ebitda), 0) AS value FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region, scenario_name"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, 'Revenue' AS step, ROUND(MEASURE(`Revenue`), 0) AS value FROM nova_molding_demo.fpa_dev.mv_ebitda WHERE `Scenario` = 'Actual' GROUP BY ALL UNION ALL SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, 'COGS' AS step, ROUND(-MEASURE(`COGS`), 0) AS value FROM nova_molding_demo.fpa_dev.mv_ebitda WHERE `Scenario` = 'Actual' GROUP BY ALL UNION ALL SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, 'Gross Profit' AS step, ROUND(MEASURE(`Gross Profit`), 0) AS value FROM nova_molding_demo.fpa_dev.mv_ebitda WHERE `Scenario` = 'Actual' GROUP BY ALL UNION ALL SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, 'OpEx' AS step, ROUND(-MEASURE(`OpEx`), 0) AS value FROM nova_molding_demo.fpa_dev.mv_ebitda WHERE `Scenario` = 'Actual' GROUP BY ALL UNION ALL SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, `Scenario` AS scenario_name, 'EBITDA' AS step, ROUND(MEASURE(`EBITDA`), 0) AS value FROM nova_molding_demo.fpa_dev.mv_ebitda WHERE `Scenario` = 'Actual' GROUP BY ALL"
       ]
     },
     {
       "name": "ds_wc_metric_qtr",
       "displayName": "Working Capital Metrics Long",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, 'DSO' AS metric, ROUND(AVG(dso), 1) AS value FROM milacron_demo.fpa_dev.gold_working_capital GROUP BY fiscal_year, fiscal_quarter, business_unit, region UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, 'DPO' AS metric, ROUND(AVG(dpo), 1) AS value FROM milacron_demo.fpa_dev.gold_working_capital GROUP BY fiscal_year, fiscal_quarter, business_unit, region UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, 'CCC' AS metric, ROUND(AVG(cash_conversion_cycle), 1) AS value FROM milacron_demo.fpa_dev.gold_working_capital GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, 'DSO' AS metric, ROUND(MEASURE(`DSO`), 1) AS value FROM nova_molding_demo.fpa_dev.mv_working_capital GROUP BY ALL UNION ALL SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, 'DPO' AS metric, ROUND(MEASURE(`DPO`), 1) AS value FROM nova_molding_demo.fpa_dev.mv_working_capital GROUP BY ALL UNION ALL SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, 'CCC' AS metric, ROUND(MEASURE(`Cash Conversion Cycle`), 1) AS value FROM nova_molding_demo.fpa_dev.mv_working_capital GROUP BY ALL"
       ]
     },
     {
       "name": "ds_orders_qtr",
       "displayName": "Orders by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, fiscal_month, CONCAT(CAST(fiscal_year AS STRING), '-', LPAD(CAST(fiscal_month AS STRING), 2, '0')) AS period, business_unit, region, ROUND(SUM(order_intake), 0) AS order_intake, ROUND(SUM(backlog_value), 0) AS backlog_value, ROUND(SUM(shipped_revenue), 0) AS shipped_revenue, ROUND(AVG(book_to_bill_ratio), 2) AS book_to_bill_ratio FROM milacron_demo.fpa_dev.gold_order_backlog GROUP BY fiscal_year, fiscal_quarter, fiscal_month, CONCAT(CAST(fiscal_year AS STRING), '-', LPAD(CAST(fiscal_month AS STRING), 2, '0')), business_unit, region"
+        "SELECT fiscal_year, fiscal_quarter, fiscal_month, CONCAT(CAST(fiscal_year AS STRING), '-', LPAD(CAST(fiscal_month AS STRING), 2, '0')) AS period, business_unit, region, ROUND(SUM(order_intake), 0) AS order_intake, ROUND(SUM(backlog_value), 0) AS backlog_value, ROUND(SUM(shipped_revenue), 0) AS shipped_revenue, ROUND(AVG(book_to_bill_ratio), 2) AS book_to_bill_ratio FROM nova_molding_demo.fpa_dev.gold_order_backlog GROUP BY fiscal_year, fiscal_quarter, fiscal_month, CONCAT(CAST(fiscal_year AS STRING), '-', LPAD(CAST(fiscal_month AS STRING), 2, '0')), business_unit, region"
       ]
     },
     {
       "name": "ds_aftermarket_qtr",
       "displayName": "Aftermarket by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, ROUND(AVG(aftermarket_mix_pct), 1) AS aftermarket_mix_pct, ROUND(AVG(service_attach_rate) * 100, 1) AS service_attach_rate_pct FROM milacron_demo.fpa_dev.gold_aftermarket_mix GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, ROUND(MEASURE(`Aftermarket Mix Pct`), 1) AS aftermarket_mix_pct, ROUND(MEASURE(`Service Attach Rate`) * 100, 1) AS service_attach_rate_pct FROM nova_molding_demo.fpa_dev.mv_aftermarket GROUP BY ALL"
       ]
     },
     {
       "name": "ds_order_metrics_long",
       "displayName": "Order Intake vs Shipped Long",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, 'Order Intake' AS metric, ROUND(SUM(order_intake), 0) AS value FROM milacron_demo.fpa_dev.gold_order_backlog GROUP BY fiscal_year, fiscal_quarter, business_unit, region UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, 'Shipped Revenue' AS metric, ROUND(SUM(shipped_revenue), 0) AS value FROM milacron_demo.fpa_dev.gold_order_backlog GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
+        "SELECT fiscal_year, fiscal_quarter, business_unit, region, 'Order Intake' AS metric, ROUND(SUM(order_intake), 0) AS value FROM nova_molding_demo.fpa_dev.gold_order_backlog GROUP BY fiscal_year, fiscal_quarter, business_unit, region UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, 'Shipped Revenue' AS metric, ROUND(SUM(shipped_revenue), 0) AS value FROM nova_molding_demo.fpa_dev.gold_order_backlog GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
       ]
     },
     {
       "name": "ds_forecast_monthly",
       "displayName": "Forecast Monthly",
       "queryLines": [
-        "WITH base AS (SELECT f.entity_id, f.forecast_month, CAST(SUBSTRING(f.forecast_month, 1, 4) AS INT) AS fiscal_year, CONCAT('Q', CAST(CEIL(CAST(SUBSTRING(f.forecast_month, 6, 2) AS INT) / 3.0) AS STRING)) AS fiscal_quarter, e.business_unit, e.region, f.predicted_revenue, f.prediction_interval_lower, f.prediction_interval_upper, COALESCE(r.revenue_usd, 0) AS actual_revenue FROM milacron_demo.fpa_dev.ml_revenue_forecast f LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON f.entity_id = e.entity_id LEFT JOIN milacron_demo.fpa_dev.gold_revenue_summary r ON e.business_unit = r.business_unit AND e.region = r.region AND f.forecast_month = CONCAT(r.fiscal_year, '-', LPAD(r.fiscal_month, 2, '0')) AND r.scenario_name = 'Actual') SELECT fiscal_year, fiscal_quarter, business_unit, region, forecast_month, ROUND(SUM(predicted_revenue), 0) AS predicted_revenue, ROUND(SUM(actual_revenue), 0) AS actual_revenue, ROUND(SUM(prediction_interval_lower), 0) AS prediction_interval_lower, ROUND(SUM(prediction_interval_upper), 0) AS prediction_interval_upper, ROUND(AVG(ABS(predicted_revenue - actual_revenue) / NULLIF(actual_revenue, 0)) * 100, 1) AS mape_pct, ROUND(AVG((predicted_revenue - actual_revenue) / NULLIF(actual_revenue, 0)) * 100, 1) AS forecast_vs_actual_pct FROM base GROUP BY fiscal_year, fiscal_quarter, business_unit, region, forecast_month"
+        "WITH base AS (SELECT f.entity_id, f.forecast_month, CAST(SUBSTRING(f.forecast_month, 1, 4) AS INT) AS fiscal_year, CONCAT('Q', CAST(CEIL(CAST(SUBSTRING(f.forecast_month, 6, 2) AS INT) / 3.0) AS STRING)) AS fiscal_quarter, e.business_unit, e.region, f.predicted_revenue, f.prediction_interval_lower, f.prediction_interval_upper, COALESCE(r.revenue_usd, 0) AS actual_revenue FROM nova_molding_demo.fpa_dev.ml_revenue_forecast f LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON f.entity_id = e.entity_id LEFT JOIN nova_molding_demo.fpa_dev.gold_revenue_summary r ON e.business_unit = r.business_unit AND e.region = r.region AND f.forecast_month = CONCAT(r.fiscal_year, '-', LPAD(r.fiscal_month, 2, '0')) AND r.scenario_name = 'Actual') SELECT fiscal_year, fiscal_quarter, business_unit, region, forecast_month, ROUND(SUM(predicted_revenue), 0) AS predicted_revenue, ROUND(SUM(actual_revenue), 0) AS actual_revenue, ROUND(SUM(prediction_interval_lower), 0) AS prediction_interval_lower, ROUND(SUM(prediction_interval_upper), 0) AS prediction_interval_upper, ROUND(AVG(ABS(predicted_revenue - actual_revenue) / NULLIF(actual_revenue, 0)) * 100, 1) AS mape_pct, ROUND(AVG((predicted_revenue - actual_revenue) / NULLIF(actual_revenue, 0)) * 100, 1) AS forecast_vs_actual_pct FROM base GROUP BY fiscal_year, fiscal_quarter, business_unit, region, forecast_month"
       ]
     },
     {
       "name": "ds_forecast_series_long",
       "displayName": "Forecast Series Long",
       "queryLines": [
-        "WITH base AS (SELECT CAST(SUBSTRING(f.forecast_month, 1, 4) AS INT) AS fiscal_year, CONCAT('Q', CAST(CEIL(CAST(SUBSTRING(f.forecast_month, 6, 2) AS INT) / 3.0) AS STRING)) AS fiscal_quarter, e.business_unit, e.region, f.forecast_month, f.predicted_revenue, COALESCE(r.revenue_usd, 0) AS actual_revenue FROM milacron_demo.fpa_dev.ml_revenue_forecast f LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON f.entity_id = e.entity_id LEFT JOIN milacron_demo.fpa_dev.gold_revenue_summary r ON e.business_unit = r.business_unit AND e.region = r.region AND f.forecast_month = CONCAT(r.fiscal_year, '-', LPAD(r.fiscal_month, 2, '0')) AND r.scenario_name = 'Actual') SELECT fiscal_year, fiscal_quarter, business_unit, region, forecast_month, 'Predicted' AS series, ROUND(SUM(predicted_revenue), 0) AS value FROM base GROUP BY fiscal_year, fiscal_quarter, business_unit, region, forecast_month UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, forecast_month, 'Actual' AS series, ROUND(SUM(actual_revenue), 0) AS value FROM base GROUP BY fiscal_year, fiscal_quarter, business_unit, region, forecast_month"
+        "WITH base AS (SELECT CAST(SUBSTRING(f.forecast_month, 1, 4) AS INT) AS fiscal_year, CONCAT('Q', CAST(CEIL(CAST(SUBSTRING(f.forecast_month, 6, 2) AS INT) / 3.0) AS STRING)) AS fiscal_quarter, e.business_unit, e.region, f.forecast_month, f.predicted_revenue, COALESCE(r.revenue_usd, 0) AS actual_revenue FROM nova_molding_demo.fpa_dev.ml_revenue_forecast f LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON f.entity_id = e.entity_id LEFT JOIN nova_molding_demo.fpa_dev.gold_revenue_summary r ON e.business_unit = r.business_unit AND e.region = r.region AND f.forecast_month = CONCAT(r.fiscal_year, '-', LPAD(r.fiscal_month, 2, '0')) AND r.scenario_name = 'Actual') SELECT fiscal_year, fiscal_quarter, business_unit, region, forecast_month, 'Predicted' AS series, ROUND(SUM(predicted_revenue), 0) AS value FROM base GROUP BY fiscal_year, fiscal_quarter, business_unit, region, forecast_month UNION ALL SELECT fiscal_year, fiscal_quarter, business_unit, region, forecast_month, 'Actual' AS series, ROUND(SUM(actual_revenue), 0) AS value FROM base GROUP BY fiscal_year, fiscal_quarter, business_unit, region, forecast_month"
       ]
     },
     {
       "name": "ds_risk_flags",
       "displayName": "Risk Flags",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, risk_item, status, metric_value, threshold FROM (SELECT l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, COALESCE(e.region, 'Unknown') AS region, 'Leverage Covenant' AS risk_item, CASE WHEN AVG(l.net_leverage) > 3.5 THEN 'Alert' ELSE 'On Track' END AS status, ROUND(AVG(l.net_leverage), 2) AS metric_value, 3.5 AS threshold FROM milacron_demo.fpa_dev.gold_leverage_metrics l LEFT JOIN milacron_demo.fpa_dev.silver_dim_entity e ON l.entity_id = e.entity_id GROUP BY l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), COALESCE(e.region, 'Unknown') UNION ALL SELECT w.fiscal_year, w.fiscal_quarter, w.business_unit, w.region, 'DSO Overrun' AS risk_item, CASE WHEN AVG(w.dso) > 60 THEN 'Alert' ELSE 'On Track' END AS status, ROUND(AVG(w.dso), 1) AS metric_value, 60.0 AS threshold FROM milacron_demo.fpa_dev.gold_working_capital w GROUP BY w.fiscal_year, w.fiscal_quarter, w.business_unit, w.region UNION ALL SELECT b.fiscal_year, b.fiscal_quarter, b.business_unit, b.region, 'Margin Compression' AS risk_item, CASE WHEN AVG(b.ebitda_margin) < 0.15 THEN 'Alert' ELSE 'On Track' END AS status, ROUND(AVG(b.ebitda_margin) * 100, 1) AS metric_value, 15.0 AS threshold FROM milacron_demo.fpa_dev.gold_ebitda_bridge b WHERE b.scenario_name='Actual' GROUP BY b.fiscal_year, b.fiscal_quarter, b.business_unit, b.region) t"
+        "SELECT fiscal_year, fiscal_quarter, business_unit, region, risk_item, status, metric_value, threshold FROM (SELECT l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown') AS business_unit, COALESCE(e.region, 'Unknown') AS region, 'Leverage Covenant' AS risk_item, CASE WHEN AVG(l.net_leverage) > 3.5 THEN 'Alert' ELSE 'On Track' END AS status, ROUND(AVG(l.net_leverage), 2) AS metric_value, 3.5 AS threshold FROM nova_molding_demo.fpa_dev.gold_leverage_metrics l LEFT JOIN nova_molding_demo.fpa_dev.silver_dim_entity e ON l.entity_id = e.entity_id GROUP BY l.fiscal_year, l.fiscal_quarter, COALESCE(e.business_unit, 'Unknown'), COALESCE(e.region, 'Unknown') UNION ALL SELECT w.fiscal_year, w.fiscal_quarter, w.business_unit, w.region, 'DSO Overrun' AS risk_item, CASE WHEN AVG(w.dso) > 60 THEN 'Alert' ELSE 'On Track' END AS status, ROUND(AVG(w.dso), 1) AS metric_value, 60.0 AS threshold FROM nova_molding_demo.fpa_dev.gold_working_capital w GROUP BY w.fiscal_year, w.fiscal_quarter, w.business_unit, w.region UNION ALL SELECT b.fiscal_year, b.fiscal_quarter, b.business_unit, b.region, 'Margin Compression' AS risk_item, CASE WHEN AVG(b.ebitda_margin) < 0.15 THEN 'Alert' ELSE 'On Track' END AS status, ROUND(AVG(b.ebitda_margin) * 100, 1) AS metric_value, 15.0 AS threshold FROM nova_molding_demo.fpa_dev.gold_ebitda_bridge b WHERE b.scenario_name='Actual' GROUP BY b.fiscal_year, b.fiscal_quarter, b.business_unit, b.region) t"
       ]
     },
     {
       "name": "ds_plant_perf",
       "displayName": "Plant Performance",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, 'Operations' AS business_unit, CASE WHEN plant_country IN ('US','CA','MX','Brazil') THEN 'Americas' WHEN plant_country IN ('Germany','France','UK','Italy','Spain') THEN 'Europe' WHEN plant_country IN ('China','Japan','India','Korea') THEN 'Asia' ELSE 'Other' END AS region, plant_name, plant_country, ROUND(AVG(utilization_pct) * 100, 1) AS utilization_pct, ROUND(AVG(cost_variance_pct), 1) AS cost_variance_pct, ROUND(AVG(scrap_rate) * 100, 1) AS scrap_rate, ROUND(SUM(total_units), 0) AS total_units FROM milacron_demo.fpa_dev.gold_plant_performance GROUP BY fiscal_year, fiscal_quarter, plant_name, plant_country"
+        "SELECT fiscal_year, fiscal_quarter, 'Operations' AS business_unit, CASE WHEN plant_country IN ('US','CA','MX','Brazil') THEN 'Americas' WHEN plant_country IN ('Germany','France','UK','Italy','Spain') THEN 'Europe' WHEN plant_country IN ('China','Japan','India','Korea') THEN 'Asia' ELSE 'Other' END AS region, plant_name, plant_country, ROUND(AVG(utilization_pct) * 100, 1) AS utilization_pct, ROUND(AVG(cost_variance_pct), 1) AS cost_variance_pct, ROUND(AVG(scrap_rate) * 100, 1) AS scrap_rate, ROUND(SUM(total_units), 0) AS total_units FROM nova_molding_demo.fpa_dev.gold_plant_performance GROUP BY fiscal_year, fiscal_quarter, plant_name, plant_country"
       ]
     },
     {
       "name": "ds_rev_actual_qtr",
       "displayName": "Revenue Actual by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, ROUND(SUM(revenue_usd), 0) AS revenue_usd, ROUND(AVG(yoy_growth_pct), 1) AS yoy_growth_pct, ROUND(AVG(budget_variance_pct), 1) AS budget_variance_pct FROM milacron_demo.fpa_dev.gold_revenue_summary WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, ROUND(MEASURE(`Revenue`), 0) AS revenue_usd, ROUND(MEASURE(`YoY Growth Pct`), 1) AS yoy_growth_pct, ROUND(MEASURE(`Budget Variance Pct`), 1) AS budget_variance_pct FROM nova_molding_demo.fpa_dev.mv_revenue WHERE `Scenario` = 'Actual' GROUP BY ALL"
       ]
     },
     {
       "name": "ds_ebitda_actual_qtr",
       "displayName": "EBITDA Actual by Quarter",
       "queryLines": [
-        "SELECT fiscal_year, fiscal_quarter, business_unit, region, ROUND(SUM(revenue), 0) AS revenue, ROUND(SUM(cogs), 0) AS cogs, ROUND(SUM(gross_profit), 0) AS gross_profit, ROUND(SUM(opex), 0) AS opex, ROUND(SUM(ebitda), 0) AS ebitda, ROUND(AVG(ebitda_margin) * 100, 1) AS ebitda_margin_pct, ROUND(AVG(CASE WHEN revenue <> 0 THEN (gross_profit / revenue) * 100 END), 2) AS gross_margin_pct FROM milacron_demo.fpa_dev.gold_ebitda_bridge WHERE scenario_name = 'Actual' GROUP BY fiscal_year, fiscal_quarter, business_unit, region"
+        "SELECT `Fiscal Year` AS fiscal_year, `Fiscal Quarter` AS fiscal_quarter, `Business Unit` AS business_unit, `Region` AS region, ROUND(MEASURE(`Revenue`), 0) AS revenue, ROUND(MEASURE(`COGS`), 0) AS cogs, ROUND(MEASURE(`Gross Profit`), 0) AS gross_profit, ROUND(MEASURE(`OpEx`), 0) AS opex, ROUND(MEASURE(`EBITDA`), 0) AS ebitda, ROUND(MEASURE(`EBITDA Margin`) * 100, 1) AS ebitda_margin_pct, ROUND(CASE WHEN MEASURE(`Revenue`) <> 0 THEN (MEASURE(`Gross Profit`) / MEASURE(`Revenue`)) * 100 END, 2) AS gross_margin_pct FROM nova_molding_demo.fpa_dev.mv_ebitda WHERE `Scenario` = 'Actual' GROUP BY ALL"
       ]
     }
   ],
@@ -152,7 +152,6 @@
     {
       "name": "cfo_executive_summary",
       "displayName": "Executive Summary",
-      "pageType": "PAGE_TYPE_CANVAS",
       "layout": [
         {
           "widget": {
@@ -318,8 +317,8 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 1,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -486,9 +485,9 @@
             }
           },
           "position": {
-            "x": 1,
-            "y": 0,
-            "width": 1,
+            "x": 2,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -655,9 +654,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 0,
-            "width": 1,
+            "x": 4,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -824,9 +823,9 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 0,
-            "width": 1,
+            "x": 6,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -835,17 +834,15 @@
             "name": "p1_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# CFO-Level FP&A Dashboard",
-                "",
-                "**Revenue, profitability, cash, and forecast performance**"
+                "# CFO-Level FP&A Dashboard**Revenue, profitability, cash, and forecast performance**"
               ]
             }
           },
           "position": {
-            "x": 4,
+            "x": 0,
             "y": 0,
-            "width": 2,
-            "height": 2
+            "width": 12,
+            "height": 1
           }
         },
         {
@@ -884,7 +881,7 @@
           "position": {
             "x": 0,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -922,9 +919,9 @@
             }
           },
           "position": {
-            "x": 1,
+            "x": 2,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -962,9 +959,9 @@
             }
           },
           "position": {
-            "x": 2,
+            "x": 4,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1002,9 +999,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1042,9 +1039,9 @@
             }
           },
           "position": {
-            "x": 4,
+            "x": 8,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1082,9 +1079,9 @@
             }
           },
           "position": {
-            "x": 5,
+            "x": 10,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1149,7 +1146,7 @@
           "position": {
             "x": 0,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -1201,9 +1198,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -1257,7 +1254,7 @@
           "position": {
             "x": 0,
             "y": 8,
-            "width": 2,
+            "width": 4,
             "height": 4
           }
         },
@@ -1309,9 +1306,9 @@
             }
           },
           "position": {
-            "x": 2,
+            "x": 4,
             "y": 8,
-            "width": 2,
+            "width": 4,
             "height": 4
           }
         },
@@ -1374,18 +1371,19 @@
             }
           },
           "position": {
-            "x": 4,
+            "x": 8,
             "y": 8,
-            "width": 2,
+            "width": 4,
             "height": 4
           }
         }
-      ]
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     },
     {
       "name": "revenue_profitability",
       "displayName": "Revenue & Profitability",
-      "pageType": "PAGE_TYPE_CANVAS",
       "layout": [
         {
           "widget": {
@@ -1479,8 +1477,8 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 1,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -1575,9 +1573,9 @@
             }
           },
           "position": {
-            "x": 1,
-            "y": 0,
-            "width": 1,
+            "x": 2,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -1672,9 +1670,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 0,
-            "width": 1,
+            "x": 4,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -1769,9 +1767,9 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 0,
-            "width": 1,
+            "x": 6,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -1780,17 +1778,15 @@
             "name": "p2_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Revenue & Profitability",
-                "",
-                "**Actual vs plan performance and margin drivers**"
+                "# Revenue & Profitability**Actual vs plan performance and margin drivers**"
               ]
             }
           },
           "position": {
-            "x": 4,
+            "x": 0,
             "y": 0,
-            "width": 2,
-            "height": 2
+            "width": 12,
+            "height": 1
           }
         },
         {
@@ -1829,7 +1825,7 @@
           "position": {
             "x": 0,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1867,9 +1863,9 @@
             }
           },
           "position": {
-            "x": 1,
+            "x": 2,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1907,9 +1903,9 @@
             }
           },
           "position": {
-            "x": 2,
+            "x": 4,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -1947,9 +1943,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -2014,7 +2010,7 @@
           "position": {
             "x": 0,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -2066,9 +2062,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -2122,7 +2118,7 @@
           "position": {
             "x": 0,
             "y": 8,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -2185,9 +2181,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 8,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -2252,16 +2248,17 @@
           "position": {
             "x": 0,
             "y": 12,
-            "width": 6,
+            "width": 12,
             "height": 4
           }
         }
-      ]
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     },
     {
       "name": "cash_leverage_wc",
       "displayName": "Cash, Leverage & Working Capital",
-      "pageType": "PAGE_TYPE_CANVAS",
       "layout": [
         {
           "widget": {
@@ -2373,8 +2370,8 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 1,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -2487,9 +2484,9 @@
             }
           },
           "position": {
-            "x": 1,
-            "y": 0,
-            "width": 1,
+            "x": 2,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -2602,9 +2599,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 0,
-            "width": 1,
+            "x": 4,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -2717,9 +2714,9 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 0,
-            "width": 1,
+            "x": 6,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -2728,17 +2725,15 @@
             "name": "p3_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Cash, Leverage & Working Capital",
-                "",
-                "**Liquidity, debt, and operating cycle management**"
+                "# Cash, Leverage & Working Capital**Liquidity, debt, and operating cycle management**"
               ]
             }
           },
           "position": {
-            "x": 4,
+            "x": 0,
             "y": 0,
-            "width": 2,
-            "height": 2
+            "width": 12,
+            "height": 1
           }
         },
         {
@@ -2777,7 +2772,7 @@
           "position": {
             "x": 0,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -2815,9 +2810,9 @@
             }
           },
           "position": {
-            "x": 1,
+            "x": 2,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -2855,9 +2850,9 @@
             }
           },
           "position": {
-            "x": 2,
+            "x": 4,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -2895,9 +2890,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -2935,9 +2930,9 @@
             }
           },
           "position": {
-            "x": 4,
+            "x": 8,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -2975,9 +2970,9 @@
             }
           },
           "position": {
-            "x": 5,
+            "x": 10,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -3042,7 +3037,7 @@
           "position": {
             "x": 0,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3094,9 +3089,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3161,7 +3156,7 @@
           "position": {
             "x": 0,
             "y": 8,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3213,18 +3208,19 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 8,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         }
-      ]
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     },
     {
       "name": "orders_backlog_aftermarket",
       "displayName": "Orders, Backlog & Aftermarket",
-      "pageType": "PAGE_TYPE_CANVAS",
       "layout": [
         {
           "widget": {
@@ -3300,8 +3296,8 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 1,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -3378,9 +3374,9 @@
             }
           },
           "position": {
-            "x": 1,
-            "y": 0,
-            "width": 1,
+            "x": 2,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -3457,9 +3453,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 0,
-            "width": 1,
+            "x": 4,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -3536,9 +3532,9 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 0,
-            "width": 1,
+            "x": 6,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -3547,17 +3543,15 @@
             "name": "p4_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Orders, Backlog & Aftermarket",
-                "",
-                "**Demand momentum, pipeline quality, and service mix**"
+                "# Orders, Backlog & Aftermarket**Demand momentum, pipeline quality, and service mix**"
               ]
             }
           },
           "position": {
-            "x": 4,
+            "x": 0,
             "y": 0,
-            "width": 2,
-            "height": 2
+            "width": 12,
+            "height": 1
           }
         },
         {
@@ -3596,7 +3590,7 @@
           "position": {
             "x": 0,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -3634,9 +3628,9 @@
             }
           },
           "position": {
-            "x": 1,
+            "x": 2,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -3674,9 +3668,9 @@
             }
           },
           "position": {
-            "x": 2,
+            "x": 4,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -3714,9 +3708,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 2,
-            "width": 1,
+            "width": 2,
             "height": 2
           }
         },
@@ -3770,7 +3764,7 @@
           "position": {
             "x": 0,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3822,9 +3816,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 4,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3878,7 +3872,7 @@
           "position": {
             "x": 0,
             "y": 8,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3930,9 +3924,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 8,
-            "width": 3,
+            "width": 6,
             "height": 4
           }
         },
@@ -3997,16 +3991,17 @@
           "position": {
             "x": 0,
             "y": 12,
-            "width": 6,
+            "width": 12,
             "height": 4
           }
         }
-      ]
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     },
     {
       "name": "ml_forecast_risk",
       "displayName": "ML Forecast & Risk",
-      "pageType": "PAGE_TYPE_CANVAS",
       "layout": [
         {
           "widget": {
@@ -4100,8 +4095,8 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 1,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -4196,9 +4191,9 @@
             }
           },
           "position": {
-            "x": 1,
-            "y": 0,
-            "width": 1,
+            "x": 2,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -4293,9 +4288,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 0,
-            "width": 1,
+            "x": 4,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -4390,9 +4385,9 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 0,
-            "width": 1,
+            "x": 6,
+            "y": 1,
+            "width": 2,
             "height": 1
           }
         },
@@ -4401,17 +4396,15 @@
             "name": "p5_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# ML Forecast & Risk",
-                "",
-                "**Forward-looking outlook with automated risk flags**"
+                "# ML Forecast & Risk**Forward-looking outlook with automated risk flags**"
               ]
             }
           },
           "position": {
-            "x": 4,
+            "x": 0,
             "y": 0,
-            "width": 2,
-            "height": 2
+            "width": 12,
+            "height": 1
           }
         },
         {
@@ -4450,7 +4443,7 @@
           "position": {
             "x": 0,
             "y": 2,
-            "width": 2,
+            "width": 4,
             "height": 2
           }
         },
@@ -4488,9 +4481,9 @@
             }
           },
           "position": {
-            "x": 2,
+            "x": 4,
             "y": 2,
-            "width": 2,
+            "width": 4,
             "height": 2
           }
         },
@@ -4528,9 +4521,9 @@
             }
           },
           "position": {
-            "x": 4,
+            "x": 8,
             "y": 2,
-            "width": 2,
+            "width": 4,
             "height": 2
           }
         },
@@ -4584,7 +4577,7 @@
           "position": {
             "x": 0,
             "y": 4,
-            "width": 6,
+            "width": 12,
             "height": 3
           }
         },
@@ -4649,7 +4642,7 @@
           "position": {
             "x": 0,
             "y": 7,
-            "width": 6,
+            "width": 12,
             "height": 3
           }
         },
@@ -4703,7 +4696,7 @@
           "position": {
             "x": 0,
             "y": 10,
-            "width": 3,
+            "width": 6,
             "height": 3
           }
         },
@@ -4755,9 +4748,9 @@
             }
           },
           "position": {
-            "x": 3,
+            "x": 6,
             "y": 10,
-            "width": 3,
+            "width": 6,
             "height": 3
           }
         },
@@ -4811,11 +4804,13 @@
           "position": {
             "x": 0,
             "y": 13,
-            "width": 6,
+            "width": 12,
             "height": 3
           }
         }
-      ]
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
     }
   ],
   "uiSettings": {

@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Reusable KPI Card Component
+Nova Molding Systems FP&A — Reusable KPI Card Component
 Renders a styled metric card with value, delta, and optional sparkline.
 """
 import streamlit as st

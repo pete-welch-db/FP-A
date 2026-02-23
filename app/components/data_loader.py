@@ -1,5 +1,5 @@
 """
-Milacron FP&A — Data Loader
+Nova Molding Systems FP&A — Data Loader
 Centralised SQL execution with connection pooling, caching, numeric
 coercion, and graceful fallback to mock data.
 """
@@ -10,6 +10,7 @@ from databricks.sdk.core import Config
 
 from config import (
     DATABRICKS_HOST,
+    DATABRICKS_TOKEN,
     DATABRICKS_HTTP_PATH,
     USE_MOCK_DATA,
     DATABRICKS_CATALOG,
@@ -18,13 +19,31 @@ from config import (
 from data.mock_data import MOCK_REGISTRY
 
 
+def _normalize_host(host: str) -> str:
+    host = (host or "").strip()
+    if host.startswith("https://"):
+        host = host[len("https://") :]
+    elif host.startswith("http://"):
+        host = host[len("http://") :]
+    return host.rstrip("/")
+
+
 @st.cache_resource(ttl=300, show_spinner=False)
 def _get_connection():
+    # Local-first auth: use explicit PAT from env/.env when available.
+    if DATABRICKS_TOKEN and DATABRICKS_HOST and DATABRICKS_HTTP_PATH:
+        return sql.connect(
+            server_hostname=_normalize_host(DATABRICKS_HOST),
+            http_path=DATABRICKS_HTTP_PATH,
+            access_token=DATABRICKS_TOKEN,
+        )
+
+    # Fallback to Databricks unified auth/CLI profile.
     cfg = Config()
     return sql.connect(
-        server_hostname=cfg.host or DATABRICKS_HOST,
+        server_hostname=_normalize_host(cfg.host or DATABRICKS_HOST),
         http_path=DATABRICKS_HTTP_PATH,
-        credentials_provider=lambda: cfg.authenticate,
+        credentials_provider=cfg.authenticate,
     )
 
 

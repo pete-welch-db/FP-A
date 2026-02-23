@@ -1,6 +1,6 @@
-# Milacron FP&A — Databricks Demo
+# Nova Molding Systems FP&A — Databricks Demo
 
-Production-realistic presales demo showing how Databricks becomes Milacron's
+Production-realistic presales demo showing how Databricks becomes Nova Molding Systems's
 financial analytics and planning backbone by ingesting OneStream-modeled data
 into a governed Unity Catalog lakehouse with automated FP&A workflows.
 
@@ -59,7 +59,7 @@ databricks bundle deploy --force
 │   └── data/mock_data.py       # Fallback mock data
 ├── resources/
 │   └── dashboards/
-│       └── milacron_fpa.lvdash.json  # AI/BI Dashboard
+│       └── nova_molding_fpa.lvdash.json  # AI/BI Dashboard
 └── scripts/
     ├── deploy_genie_space.py   # Genie Space creation
     └── update_env_ids.sh       # Post-deploy ID capture
@@ -80,9 +80,9 @@ databricks bundle deploy --force
 
 | Target  | Catalog              | Schema  |
 |---------|----------------------|---------|
-| dev     | milacron_demo_dev    | fpa_dev |
-| staging | milacron_demo_staging| fpa     |
-| prod    | milacron_demo        | fpa     |
+| dev     | nova_molding_demo_dev    | fpa_dev |
+| staging | nova_molding_demo_staging| fpa     |
+| prod    | nova_molding_demo        | fpa     |
 
 ## Compute
 

@@ -1,12 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Milacron FP&A Demo — Common Setup
+# MAGIC # Nova Molding Systems FP&A Demo — Common Setup
 # MAGIC Creates the Unity Catalog catalog, schema, and volumes required by all
 # MAGIC downstream notebooks and the DLT pipeline.
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "milacron_demo", "UC Catalog")
+dbutils.widgets.text("catalog", "nova_molding_demo", "UC Catalog")
 dbutils.widgets.text("schema", "fpa", "UC Schema")
 
 catalog = dbutils.widgets.get("catalog")
