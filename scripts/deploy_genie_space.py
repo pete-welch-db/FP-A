@@ -49,7 +49,8 @@ Key definitions:
 
 When comparing scenarios, "Actual" is reported results, "Budget" is the annual operating plan, "Forecast" is the latest estimate.
 Always express currency in USD. When asked about trends, default to trailing 12 months unless specified.
-All tables are in catalog '{catalog}' and schema '{schema}'."""
+All tables are in catalog '{catalog}' and schema '{schema}'.
+Only use columns that exist in the registered tables. Do not assume fields like end_market, scenario_name in cash-flow summaries, or price/volume/cost bridge columns unless they are explicitly present."""
 
 ALL_TABLES = [
     f"{catalog}.{schema}.gold_revenue_summary",
@@ -78,16 +79,12 @@ ALL_TABLES = [
 SAMPLE_QUESTIONS = [
     "What was total revenue by business unit for Q4 2025 vs Q4 2024?",
     "Show me EBITDA margin trend by region for the last 8 quarters.",
-    "Which end-markets had the highest revenue growth year-over-year?",
-    "What is our current net leverage ratio and how has it trended?",
-    "Compare free cash flow conversion between Actual and Budget for FY2025.",
-    "What are the top 5 entities by DSO, and how does that compare to last quarter?",
-    "What is the aftermarket revenue mix by region, and which regions are below 30%?",
-    "Show the service attach rate trend for Injection Molding over the past 12 months.",
-    "What does the ML model predict for Americas Injection Molding revenue next quarter vs budget?",
-    "Which plants have utilization below 70% this quarter?",
+    "What is the current net leverage ratio and interest coverage trend over the last 8 quarters?",
+    "Which entities have the highest DSO in the most recent fiscal quarter?",
+    "What is the aftermarket mix percentage by region in the latest quarter, and which regions are below 30%?",
+    "Which plants have utilization below 70% in the latest fiscal quarter?",
     "What is the book-to-bill ratio by BU for the last 6 months?",
-    "Break down the EBITDA variance between price, volume, and cost for Extrusion in Europe.",
+    "Which product families have the highest predicted revenue in the latest forecast month?",
 ]
 
 # COMMAND ----------

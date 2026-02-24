@@ -51,13 +51,24 @@ DEBUG_LOG_LIMIT = 200
 DEFAULT_USE_PROXY_FALLBACK = False
 
 
-SAMPLE_QUESTIONS = [
+CHAT_SAMPLE_QUESTIONS = [
     "What was total revenue by business unit for Q4 2025 vs Q4 2024?",
     "Show EBITDA margin trend by region for the last 8 quarters.",
-    "Which end-markets had the highest year-over-year revenue growth?",
-    "What is our current net leverage ratio and trend over the last 6 quarters?",
-    "Compare free cash flow conversion between Actual and Budget for FY2025.",
-    "Break down EBITDA variance between price, volume, and cost for Extrusion in Europe.",
+    "What is the current net leverage ratio and interest coverage trend over the last 8 quarters?",
+    "Which entities have the highest DSO in the most recent fiscal quarter?",
+    "What is the aftermarket mix percentage by region in the latest quarter, and which regions are below 30%?",
+    "Which plants have utilization below 70% in the latest fiscal quarter?",
+    "What is the book-to-bill ratio by business unit for the last 6 months?",
+    "Which product families have the highest predicted revenue in the latest forecast month?",
+]
+
+RESEARCH_SAMPLE_QUESTIONS = [
+    "Prepare a CFO board-readout for the quarter: revenue trend, EBITDA margin trend, net leverage, and the top 3 financial risks to plan.",
+    "Which business units are most likely to miss next-quarter financial targets, and what is the expected EBITDA and cash-flow impact under best/base/worst cases?",
+    "Identify the largest working-capital release opportunities by entity over the next 90 days and estimate the cash unlocked with confidence levels.",
+    "Recommend capital allocation priorities across business units using profitability trend, forecast momentum, and leverage constraints.",
+    "Where are we over- or under-investing relative to returns? Propose a CFO action plan with expected margin and free-cash-flow impact.",
+    "Create a CEO/CFO decision brief: what to protect, what to cut, and what to accelerate for the next two quarters based on current signals.",
 ]
 
 
@@ -473,12 +484,13 @@ def _render_research_mode(user_prompt: str):
         st.success("Reasoning steps completed: 4/4")
 
 
-def _render_question_chips():
+def _render_question_chips(mode: str):
     st.markdown("#### Sample questions")
+    questions = CHAT_SAMPLE_QUESTIONS if mode == "Chat" else RESEARCH_SAMPLE_QUESTIONS
     cols = st.columns(2)
-    for idx, question in enumerate(SAMPLE_QUESTIONS):
+    for idx, question in enumerate(questions):
         with cols[idx % 2]:
-            if st.button(question, use_container_width=True, key=f"sample_q_{idx}"):
+            if st.button(question, use_container_width=True, key=f"sample_q_{mode}_{idx}"):
                 st.session_state.light_prefill_prompt = question
 
 
@@ -497,7 +509,7 @@ def render():
         st.warning(
             "GENIE_SPACE_ID is not configured. Set it in app.yaml or .env to enable this page."
         )
-        _render_question_chips()
+        _render_question_chips("Chat")
         return
 
     if not DATABRICKS_HOST or not _get_token():
@@ -532,7 +544,7 @@ def render():
                 st.error("Connectivity check failed")
             st.json(diagnostics)
 
-        _render_question_chips()
+        _render_question_chips(mode)
         if st.button("Reset conversation", use_container_width=True):
             st.session_state.light_conversation_id = None
             st.session_state.light_prefill_prompt = ""
