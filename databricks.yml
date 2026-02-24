@@ -119,24 +119,10 @@ resources:
       embed_credentials: true
 
   apps:
-    nova_molding_fpa_app:
-      name: "nova-molding-fpa-${bundle.target}"
-      source_code_path: app/
-      description: "Nova Molding Systems FP&A Analytics Application"
-      resources:
-        - name: sql-warehouse
-          sql_warehouse:
-            id: ${var.warehouse_id}
-            permission: CAN_USE
     nova_molding_fpa_lightweight_app:
-      name: "nova-molding-fpa-lightweight-${bundle.target}"
+      name: "nova-molding-fpa-lite-${bundle.target}"
       source_code_path: app/
       description: "Nova Molding Systems FP&A Lightweight 5-Minute Demo"
-      config:
-        command:
-          - "streamlit"
-          - "run"
-          - "app_lightweight.py"
       resources:
         - name: sql-warehouse
           sql_warehouse:

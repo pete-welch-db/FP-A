@@ -1,7 +1,7 @@
 command:
   - "streamlit"
   - "run"
-  - "app.py"
+  - "app_lightweight.py"
 
 env:
   - name: DATABRICKS_HOST

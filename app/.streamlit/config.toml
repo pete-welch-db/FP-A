@@ -1,0 +1,17 @@
+# Nova Molding FP&A Lightweight Demo — Light Mode Theme
+# Databricks brand: primary #FF3621, secondary #1B3139
+# https://brand.databricks.com/colors
+
+[theme]
+base = "light"
+primaryColor = "#FF3621"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F7FA"
+textColor = "#1B3139"
+font = "sans serif"
+
+[theme.light]
+primaryColor = "#FF3621"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F7FA"
+textColor = "#1B3139"
