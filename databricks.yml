@@ -96,9 +96,19 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
 
-        - task_key: deploy_genie
+        - task_key: grant_app_uc_permissions
           depends_on:
             - task_key: gold_metrics
+          notebook_task:
+            notebook_path: scripts/grant_app_uc_permissions.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              app_name: nova-molding-fpa-lite-${bundle.target}
+
+        - task_key: deploy_genie
+          depends_on:
+            - task_key: grant_app_uc_permissions
           notebook_task:
             notebook_path: scripts/deploy_genie_space.py
             base_parameters:
