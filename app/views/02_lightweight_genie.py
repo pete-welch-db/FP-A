@@ -13,6 +13,26 @@ import streamlit as st
 
 from config import DATABRICKS_HOST, DATABRICKS_TOKEN, GENIE_SPACE_ID
 
+try:
+    from databricks.sdk.core import Config
+    SDK_AVAILABLE = True
+except ImportError:
+    SDK_AVAILABLE = False
+
+
+def _get_token() -> str:
+    """Get Databricks token: env first, then SDK Config (for Databricks Apps)."""
+    if DATABRICKS_TOKEN:
+        return DATABRICKS_TOKEN
+    if SDK_AVAILABLE:
+        try:
+            auth = Config().authenticate()
+            if auth and "Authorization" in auth:
+                return auth["Authorization"].replace("Bearer ", "").strip()
+        except Exception:
+            pass
+    return ""
+
 
 PROCESSING_STATUSES = {
     "EXECUTING_QUERY",
@@ -94,7 +114,7 @@ def _api_request(method: str, url: str, payload: dict | None = None) -> dict:
     direct egress. This handles common local networking differences.
     """
     headers = {
-        "Authorization": f"Bearer {DATABRICKS_TOKEN}",
+        "Authorization": f"Bearer {_get_token()}",
         "Content-Type": "application/json",
     }
     _resolve_workspace_host()
@@ -158,7 +178,7 @@ def _api_request(method: str, url: str, payload: dict | None = None) -> dict:
                 "-X",
                 method,
                 "-H",
-                f"Authorization: Bearer {DATABRICKS_TOKEN}",
+                f"Authorization: Bearer {_get_token()}",
                 "-H",
                 "Content-Type: application/json",
                 url,
@@ -480,8 +500,8 @@ def render():
         _render_question_chips()
         return
 
-    if not DATABRICKS_HOST or not DATABRICKS_TOKEN:
-        st.error("DATABRICKS_HOST and DATABRICKS_TOKEN must be configured for Genie.")
+    if not DATABRICKS_HOST or not _get_token():
+        st.error("DATABRICKS_HOST and a valid token (DATABRICKS_TOKEN or Databricks CLI auth) must be configured for Genie.")
         return
 
     mode = st.radio(
