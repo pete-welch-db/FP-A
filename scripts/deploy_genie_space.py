@@ -11,13 +11,16 @@
 
 dbutils.widgets.text("catalog", "nova_molding_demo", "UC Catalog")
 dbutils.widgets.text("schema", "fpa", "UC Schema")
-dbutils.widgets.text("warehouse_id", "148ccb90800933a1", "SQL Warehouse ID")
+dbutils.widgets.text("warehouse_id", "", "SQL Warehouse ID")
 dbutils.widgets.text("genie_space_id", "", "Existing Genie Space ID (optional)")
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
 warehouse_id = dbutils.widgets.get("warehouse_id")
 genie_space_id_override = dbutils.widgets.get("genie_space_id").strip()
+
+if not warehouse_id:
+    raise ValueError("warehouse_id is required. Pass it via bundle variable --var warehouse_id=<warehouse_id>.")
 
 # COMMAND ----------
 

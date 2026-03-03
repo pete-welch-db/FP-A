@@ -1,93 +1,114 @@
-# Nova Molding Systems FP&A — Databricks Demo
+# Nova Molding Systems FP&A Demo (Databricks + DAB)
 
-Production-realistic presales demo showing how Databricks becomes Nova Molding Systems's
-financial analytics and planning backbone by ingesting OneStream-modeled data
-into a governed Unity Catalog lakehouse with automated FP&A workflows.
+This repository contains a customer-ready FP&A demo built on Databricks:
 
-## Architecture
+- DLT medallion pipeline (bronze/silver/gold)
+- Databricks SQL + AI/BI dashboard artifacts
+- Genie space bootstrap script
+- Streamlit lightweight app deployed with Databricks Apps
 
-```
-OneStream CSVs → UC Volume → DLT (Bronze/Silver/Gold) → Streamlit App
-                                                       → Genie Space
-                                                       → AI/BI Dashboard
-                                                       → UC Metric Views
-                                        ML (LightGBM) → ml_revenue_forecast
-```
+## Security and Configuration Model
 
-## Quick Start
+Tracked files in this repo intentionally do **not** contain workspace endpoints, IDs, or tokens.
+
+- Put all environment-specific values in local `.env` (gitignored).
+- Keep `.env` out of version control.
+- If you modify tracked manifests locally for deployment, do not commit those changes.
+
+## Prerequisites
+
+- Databricks CLI installed and authenticated (`databricks auth login`)
+- Access to a Databricks workspace with permissions for:
+  - Unity Catalog object creation/grants
+  - Lakeflow Declarative Pipelines (DLT)
+  - Jobs, Dashboards, and Apps
+  - Genie
+- A Serverless SQL Warehouse ID
+
+## 1) Clone and Configure
 
 ```bash
-# 1. Copy and fill in environment variables
+git clone <your-fork-or-repo-url>
+cd FP-A
 cp env.example .env
+```
 
-# 2. Validate the bundle
-databricks bundle validate
+Open `.env` and set at least:
 
-# 3. Deploy to your workspace
-databricks bundle deploy --force --var warehouse_id=<your_warehouse_id>
+- `DATABRICKS_HOST`
+- `DATABRICKS_TOKEN` (or use profile auth for CLI operations)
+- `DATABRICKS_HTTP_PATH`
+- `DATABRICKS_CATALOG`
+- `DATABRICKS_SCHEMA`
+- `WAREHOUSE_ID`
 
-# 4. Run the full data pipeline
-databricks bundle run data_pipeline
+## 2) Validate and Deploy with DAB
 
-# 5. Capture Genie Space ID and Dashboard URL
+```bash
+# Validate bundle config
+databricks bundle validate --target dev
+
+# Deploy bundle resources
+databricks bundle deploy --target dev --force --var warehouse_id=<your_warehouse_id>
+```
+
+## 3) Run Pipeline + Provision Analytics Assets
+
+```bash
+databricks bundle run data_pipeline --target dev
+```
+
+This job performs setup/data generation, DLT, ML training, metrics creation, app permission grants, and Genie deployment.
+
+## 4) Capture Runtime IDs into Local .env
+
+```bash
 ./scripts/update_env_ids.sh dev
-
-# 6. Redeploy with captured IDs
-databricks bundle deploy --force
 ```
 
-## Project Structure
+This writes `GENIE_SPACE_ID`, `DASHBOARD_EMBED_URL`, and `DASHBOARD_EMBED_URL_V2` to local `.env`.
 
-```
-├── databricks.yml              # DAB bundle configuration
-├── env.example                 # Environment variable template
-├── notebooks/
-│   ├── 00_common_setup.py      # Create catalog, schema, volume
-│   ├── 01_generate_bronze.py   # Faker-based synthetic data generation
-│   ├── 02_silver_transforms.py # Reference (DLT handles silver)
-│   ├── 03_ml_training.py       # LightGBM revenue forecast + MLflow
-│   └── 04_gold_metrics.py      # UC Metric Views (8 views)
-├── pipelines/
-│   └── dlt_medallion.py        # Bronze → Silver → Gold DLT pipeline
-├── app/
-│   ├── app.py                  # Streamlit routing
-│   ├── config.py               # Centralised env var reader
-│   ├── app.yaml                # Databricks App manifest
-│   ├── requirements.txt        # Python dependencies
-│   ├── components/             # Reusable UI components
-│   ├── views/                  # 7 app pages
-│   └── data/mock_data.py       # Fallback mock data
-├── resources/
-│   └── dashboards/
-│       └── nova_molding_fpa.lvdash.json  # AI/BI Dashboard
-└── scripts/
-    ├── deploy_genie_space.py   # Genie Space creation
-    └── update_env_ids.sh       # Post-deploy ID capture
+## 5) Redeploy App (if runtime env changed)
+
+```bash
+databricks bundle deploy --target dev --force --var warehouse_id=<your_warehouse_id>
 ```
 
-## KPIs Tracked
+## 6) Verify
 
-- Revenue growth by BU, region, end-market
-- Adjusted EBITDA and EBITDA margin
-- Free cash flow and FCF conversion
-- Net leverage (Net Debt / EBITDA)
-- Working capital: DSO, DPO, inventory turns
-- Aftermarket revenue mix and service attach rate
-- Order backlog and book-to-bill ratio
-- ML-predicted revenue forecast (3-month forward)
+- Open the Databricks App from `databricks apps get <app-name>`
+- Check:
+  - Dashboard page loads with your embed URL
+  - Genie page connects and answers sample questions
 
-## Deployment Targets
+## Local Run (Optional)
 
-| Target  | Catalog              | Schema  |
-|---------|----------------------|---------|
-| dev     | nova_molding_demo_dev    | fpa_dev |
-| staging | nova_molding_demo_staging| fpa     |
-| prod    | nova_molding_demo        | fpa     |
+```bash
+cd app
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m streamlit run app_lightweight.py --server.port 8501
+```
 
-## Compute
+The app reads local `.env` via `app/config.py`.
 
-All workloads run on **serverless compute**: Jobs, DLT, SQL Warehouse, and
-Databricks Apps. No classic clusters are provisioned.
+## Common Issues
+
+- **`warehouse_id` missing**: pass `--var warehouse_id=<id>` on deploy.
+- **Genie permission errors**: rerun `databricks bundle run data_pipeline --target dev` to re-apply app UC grants.
+- **No dashboard embedded**: run `./scripts/update_env_ids.sh dev` and confirm `DASHBOARD_EMBED_URL*` in `.env`.
+
+## Repository Layout
+
+```text
+databricks.yml                 # Databricks Asset Bundle config
+env.example                    # Local configuration template
+app/                           # Streamlit app and Databricks App manifest
+notebooks/                     # Setup, bronze, ML, gold metrics
+pipelines/                     # DLT pipeline code
+resources/dashboards/          # Lakeview dashboard artifacts
+scripts/                       # Genie deploy, app grant, env capture helpers
+```
 
 ## License
 
