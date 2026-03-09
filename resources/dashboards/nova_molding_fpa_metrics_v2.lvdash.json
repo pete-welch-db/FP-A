@@ -834,7 +834,7 @@
             "name": "p1_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# CFO-Level FP&A Dashboard**Revenue, profitability, cash, and forecast performance**"
+                "# CFO-Level FP&A Dashboard - **Revenue, profitability, cash, and forecast performance**"
               ]
             }
           },
@@ -1778,7 +1778,7 @@
             "name": "p2_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Revenue & Profitability**Actual vs plan performance and margin drivers**"
+                "# Revenue & Profitability - **Actual vs plan performance and margin drivers**"
               ]
             }
           },
@@ -2725,7 +2725,7 @@
             "name": "p3_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Cash, Leverage & Working Capital**Liquidity, debt, and operating cycle management**"
+                "# Cash, Leverage & Working Capital - **Liquidity, debt, and operating cycle management**"
               ]
             }
           },
@@ -3543,7 +3543,7 @@
             "name": "p4_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# Orders, Backlog & Aftermarket**Demand momentum, pipeline quality, and service mix**"
+                "# Orders, Backlog & Aftermarket - **Demand momentum, pipeline quality, and service mix**"
               ]
             }
           },
@@ -4396,7 +4396,7 @@
             "name": "p5_header",
             "multilineTextboxSpec": {
               "lines": [
-                "# ML Forecast & Risk**Forward-looking outlook with automated risk flags**"
+                "# ML Forecast & Risk - **Forward-looking outlook with automated risk flags**"
               ]
             }
           },

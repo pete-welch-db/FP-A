@@ -164,9 +164,9 @@ write_csv(df_account, "account_master.csv")
 
 # ── dim_scenario ────────────────────────────────────────────────────────
 scenarios = []
-for yr in [2024, 2025]:
+for yr in [2023, 2024, 2025, 2026]:
     for sid, (name, locked) in enumerate([
-        ("Actual", yr < 2025), ("Budget", True), ("Forecast", False),
+        ("Actual", yr < 2026), ("Budget", True), ("Forecast", False),
         ("Upside", False), ("Downside", False),
     ], start=1):
         scenarios.append({
@@ -180,7 +180,7 @@ write_csv(df_scenario, "scenario_master.csv")
 # COMMAND ----------
 
 # ── dim_time ────────────────────────────────────────────────────────────
-dates = pd.date_range("2024-01-01", "2025-12-31", freq="D")
+dates = pd.date_range("2023-01-01", "2026-12-31", freq="D")
 time_rows = []
 for d in dates:
     time_rows.append({
@@ -304,7 +304,7 @@ account_type_map = dict(zip(df_account["account_id"], df_account["account_type"]
 product_ids = df_product["product_id"].tolist()
 customer_ids = df_customer["customer_id"].tolist()
 scenario_ids = df_scenario["scenario_id"].tolist()
-months = pd.date_range("2024-01-01", "2025-12-31", freq="MS")
+months = pd.date_range("2023-01-01", "2026-02-28", freq="MS")
 
 # COMMAND ----------
 
@@ -316,7 +316,7 @@ jid = 1
 for m in months:
     time_id = m.strftime("%Y%m%d")
     sf = seasonal_factor(m.month)
-    yr_trend = 1.0 if m.year == 2024 else 1.06  # 6% YoY growth in actuals
+    yr_trend = 1.06 ** (m.year - 2023)  # 6% compounding YoY growth
     for eid in entity_ids:
         rm = region_multiplier(entity_region[eid])
         for aid in account_leaf_ids:
@@ -341,7 +341,7 @@ for m in months:
                 jid += 1
 
 df_gl = pd.DataFrame(gl_rows)
-write_csv(df_gl, "gl_journal_2024_2025.csv")
+write_csv(df_gl, "gl_journal_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -373,7 +373,7 @@ for m in months:
         oid += 1
 
 df_orders = pd.DataFrame(order_rows)
-write_csv(df_orders, "orders_2024_2025.csv")
+write_csv(df_orders, "orders_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -406,7 +406,7 @@ for m in months:
             prid += 1
 
 df_production = pd.DataFrame(prod_rows)
-write_csv(df_production, "production_2024_2025.csv")
+write_csv(df_production, "production_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -439,7 +439,7 @@ for m in months:
         svid += 1
 
 df_service = pd.DataFrame(svc_rows)
-write_csv(df_service, "service_2024_2025.csv")
+write_csv(df_service, "service_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -478,7 +478,7 @@ for m in months:
         wcid += 1
 
 df_wc = pd.DataFrame(wc_rows)
-write_csv(df_wc, "working_capital_2024_2025.csv")
+write_csv(df_wc, "working_capital_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -510,7 +510,7 @@ for m in months:
         did += 1
 
 df_debt = pd.DataFrame(debt_rows)
-write_csv(df_debt, "debt_schedule_2024_2025.csv")
+write_csv(df_debt, "debt_schedule_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -537,7 +537,7 @@ for m in months:
         fxid += 1
 
 df_fx = pd.DataFrame(fx_rows)
-write_csv(df_fx, "fx_rates_2024_2025.csv")
+write_csv(df_fx, "fx_rates_2023_2026.csv")
 
 # COMMAND ----------
 
@@ -573,7 +573,7 @@ for m in months:
         cxid += 1
 
 df_capex = pd.DataFrame(capex_rows)
-write_csv(df_capex, "capex_2024_2025.csv")
+write_csv(df_capex, "capex_2023_2026.csv")
 
 # COMMAND ----------
 

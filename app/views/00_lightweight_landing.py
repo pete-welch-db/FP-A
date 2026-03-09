@@ -5,11 +5,23 @@ def render():
     """Landing page narrative for lightweight FP&A platform demo — light mode, Databricks colors."""
     st.markdown(
         """
+        <style>
+        .main .block-container {
+            padding-top: 1.1rem;
+            padding-bottom: 1.0rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
         <div style="
             background: linear-gradient(135deg, #FFFFFF 0%, #F5F7FA 100%);
             border-radius: 16px;
-            padding: 40px 36px;
-            margin-bottom: 24px;
+            padding: 26px 28px;
+            margin-bottom: 14px;
             border: 1px solid #E8ECF1;
             position: relative;
             overflow: hidden;
@@ -34,14 +46,14 @@ def render():
                 ">DATABRICKS FOR FINANCE</p>
                 <p style="
                     color: #1B3139;
-                    font-size: 2.4rem;
+                    font-size: 2.05rem;
                     font-weight: 700;
                     line-height: 1.15;
-                    margin: 0 0 12px 0;
+                    margin: 0 0 8px 0;
                 ">AI-Driven FP&A Automation</p>
                 <p style="
                     color: #4A5568;
-                    font-size: 1.1rem;
+                    font-size: 1.0rem;
                     margin: 0;
                     max-width: 700px;
                 ">
@@ -59,16 +71,16 @@ def render():
         <div style="
             background: #FFFFFF;
             border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
             border: 1px solid #E8ECF1;
             border-left: 4px solid #FF3621;
         ">
             <p style="
                 color: #1B3139;
-                font-size: 1.02rem;
+                font-size: 0.95rem;
                 font-style: italic;
-                margin: 0 0 6px 0;
+                margin: 0 0 4px 0;
                 line-height: 1.45;
             ">"Finance teams should spend less time assembling data and more time driving decisions.
             Databricks helps automate the data-to-decision loop."</p>
@@ -82,6 +94,19 @@ def render():
 
     # Problem section with research-backed stats
     st.subheader("The Problem: FP&A Is Often Manual")
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stMetric"] {
+            background: #F5F7FA;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     p1, p2, p3 = st.columns(3)
     p1.metric("FP&A effort on data prep", "45–50%")
     p2.metric("Time on insight & action", "≈35%")
@@ -102,6 +127,7 @@ def render():
         "Sources: AFP/Workday FP&A Survey; EY 'Finance of the Future' survey."
     )
 
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
     st.markdown("---")
     st.subheader("Why Databricks for FP&A Automation")
     c1, c2 = st.columns(2)

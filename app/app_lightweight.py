@@ -17,9 +17,39 @@ st.set_page_config(
 _ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 _DATABRICKS_LOGO = _ASSETS_DIR / "Databricks_Logo.png"
 
-with st.sidebar:
-    st.image(str(_DATABRICKS_LOGO), width=240)
-    st.markdown("---")
+st.logo(str(_DATABRICKS_LOGO), size="large")
+
+st.markdown(
+    """
+    <style>
+    /* Minimize top padding on all pages */
+    section.main > div.block-container {
+        padding-top: 1rem !important;
+    }
+    /* Enlarge the sidebar logo */
+    [data-testid="stLogo"] {
+        height: auto !important;
+        max-height: none !important;
+        padding-bottom: 1rem;
+    }
+    [data-testid="stLogo"] img {
+        max-height: 80px !important;
+        width: auto !important;
+    }
+    /* Stretch nav to fill sidebar so Settings can pin to bottom */
+    [data-testid="stSidebarNav"] {
+        position: relative;
+        min-height: calc(100vh - 160px);
+    }
+    [data-testid="stSidebarNav"] li:last-child {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def _load_render(module_name: str):
@@ -32,17 +62,26 @@ def _load_render(module_name: str):
 
 
 landing = _load_render("views.00_lightweight_landing")
-dashboard = _load_render("views.01_lightweight_dashboard")
+dashboard = _load_render("views.01_executive_summary")
 genie = _load_render("views.02_lightweight_genie")
+ref_arch = _load_render("views.08_reference_architecture")
+settings = _load_render("views.09_settings")
 
 PAGES = [
     ("Landing", landing, "landing"),
-    ("Executive Dashboard", dashboard, "executive-dashboard"),
+    ("Executive Summary", dashboard, "executive-summary"),
     ("Genie + Research Agent", genie, "genie-research-agent"),
+    ("Reference Architecture", ref_arch, "reference-architecture"),
 ]
 
-page = st.navigation([
-    st.Page(fn, title=title, url_path=slug, default=(idx == 0))
-    for idx, (title, fn, slug) in enumerate(PAGES)
-])
+settings_page = st.Page(settings, title="Settings", url_path="settings", icon=":material/settings:")
+
+page = st.navigation(
+    [
+        st.Page(fn, title=title, url_path=slug, default=(idx == 0))
+        for idx, (title, fn, slug) in enumerate(PAGES)
+    ]
+    + [settings_page]
+)
+
 page.run()

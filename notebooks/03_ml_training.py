@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Nova Molding Systems FP&A — ML Revenue Forecast
-# MAGIC Trains a LightGBM model to predict 3-month rolling revenue by entity ×
+# MAGIC Trains a LightGBM model to predict 18-month rolling revenue by entity ×
 # MAGIC product family.  Tracks with MLflow, registers in Unity Catalog, and
 # MAGIC scores predictions back into Delta.
 
@@ -262,17 +262,17 @@ with mlflow.start_run(run_name="lightgbm_revenue_forecast") as run:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 4 — Batch Scoring: 3-Month Forward Forecast
+# MAGIC ## 4 — Batch Scoring: 18-Month Forward Forecast
 
 # COMMAND ----------
 
-# Build scoring frame for 3 months forward from the latest data month
+# Build scoring frame for 18 months forward from the latest data month
 latest_period = df_model.sort_values("period").drop_duplicates(
     subset=["entity_id", "product_family"], keep="last"
 )
 
 scoring_frames = []
-for fwd in range(1, 4):
+for fwd in range(1, 19):
     sf = latest_period.copy()
     sf["fiscal_month"] = (sf["fiscal_month"].astype(int) + fwd - 1) % 12 + 1
     sf["fiscal_year"] = sf["fiscal_year"].astype(int) + ((sf["fiscal_month"].astype(int) + fwd - 1) // 12)

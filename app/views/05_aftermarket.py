@@ -5,7 +5,7 @@ Growth engine: attach rate, renewal trends, IIoT opportunities.
 import streamlit as st
 import plotly.express as px
 
-from components.sidebar import render_sidebar, sql_in_list
+from components.sidebar import render_filters, sql_in_list
 from components.data_loader import run_query, fq
 from components.kpi_cards import render_kpi_card, fmt_currency, fmt_pct
 
@@ -14,7 +14,7 @@ def render():
     st.title("Aftermarket & Service")
     st.caption("Track the aftermarket growth engine — attach rates, renewals, and IIoT-driven service opportunities")
 
-    filters = render_sidebar()
+    filters = render_filters()
     bu_filter = sql_in_list(filters["business_unit"])
     region_filter = sql_in_list(filters["region"])
     fy = filters["fiscal_year"]

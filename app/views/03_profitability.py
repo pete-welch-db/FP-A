@@ -5,7 +5,7 @@ Explain margin walk: revenue → COGS → gross profit → OpEx → EBITDA.
 import streamlit as st
 import plotly.express as px
 
-from components.sidebar import render_sidebar, sql_in_list
+from components.sidebar import render_filters, sql_in_list
 from components.data_loader import run_query, fq
 from components.ebitda_bridge import render_ebitda_waterfall
 from components.kpi_cards import fmt_currency, fmt_pct
@@ -15,7 +15,7 @@ def render():
     st.title("Profitability — EBITDA Bridge")
     st.caption("Decompose margin performance across business units and regions")
 
-    filters = render_sidebar()
+    filters = render_filters()
     bu_filter = sql_in_list(filters["business_unit"])
     region_filter = sql_in_list(filters["region"])
     fy = filters["fiscal_year"]

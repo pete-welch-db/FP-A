@@ -7,7 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from components.sidebar import render_sidebar, sql_in_list
+from components.sidebar import render_filters, sql_in_list
 from components.data_loader import run_query, fq
 from components.kpi_cards import render_kpi_card, fmt_currency
 
@@ -16,7 +16,7 @@ def render():
     st.title("ML Revenue Forecast")
     st.caption("LightGBM-powered 3-month forward revenue forecast with confidence intervals and SHAP explainability")
 
-    filters = render_sidebar()
+    filters = render_filters()
     bu_filter = sql_in_list(filters["business_unit"])
     region_filter = sql_in_list(filters["region"])
 
@@ -49,9 +49,10 @@ def render():
     )
 
     # --- KPI Cards ---
-    c1, c2, c3 = st.columns(3)
-    for i, (_, row) in enumerate(monthly.iterrows()):
-        with [c1, c2, c3][i]:
+    top_months = monthly.head(3)
+    cols = st.columns(len(top_months))
+    for col, (_, row) in zip(cols, top_months.iterrows()):
+        with col:
             render_kpi_card(
                 row["forecast_month"],
                 fmt_currency(row["predicted"]),

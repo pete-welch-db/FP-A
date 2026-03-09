@@ -5,7 +5,7 @@ Drill into revenue by BU, region, end-market, and scenario.
 import streamlit as st
 import plotly.express as px
 
-from components.sidebar import render_sidebar, sql_in_list
+from components.sidebar import render_filters, sql_in_list
 from components.data_loader import run_query, fq
 
 
@@ -13,7 +13,7 @@ def render():
     st.title("Revenue Deep Dive")
     st.caption("Analyse revenue performance across business units, regions, and end-markets")
 
-    filters = render_sidebar()
+    filters = render_filters()
     bu_filter = sql_in_list(filters["business_unit"])
     region_filter = sql_in_list(filters["region"])
     fy = filters["fiscal_year"]
@@ -52,7 +52,7 @@ def render():
         GROUP BY business_unit, fiscal_quarter
     """, mock_key="revenue_summary")
 
-    if not yoy_df.empty:
+    if not yoy_df.empty and "yoy_growth" in yoy_df.columns:
         pivot = yoy_df.pivot(index="business_unit", columns="fiscal_quarter", values="yoy_growth")
         fig = px.imshow(
             pivot, text_auto=".1f", aspect="auto",

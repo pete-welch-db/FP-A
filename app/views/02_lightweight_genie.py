@@ -485,18 +485,17 @@ def _render_research_mode(user_prompt: str):
 
 
 def _render_question_chips(mode: str):
-    st.markdown("#### Sample questions")
     questions = CHAT_SAMPLE_QUESTIONS if mode == "Chat" else RESEARCH_SAMPLE_QUESTIONS
     cols = st.columns(2)
     for idx, question in enumerate(questions):
         with cols[idx % 2]:
             if st.button(question, use_container_width=True, key=f"sample_q_{mode}_{idx}"):
                 st.session_state.light_prefill_prompt = question
+                st.rerun()
 
 
 def render():
     st.title("Genie Space")
-    st.caption("Databricks-style experience with Chat and Research Agent modes")
 
     if "light_conversation_id" not in st.session_state:
         st.session_state.light_conversation_id = None
@@ -509,67 +508,41 @@ def render():
         st.warning(
             "GENIE_SPACE_ID is not configured. Set it in app.yaml or .env to enable this page."
         )
-        _render_question_chips("Chat")
         return
 
     if not DATABRICKS_HOST or not _get_token():
         st.error("DATABRICKS_HOST and a valid token (DATABRICKS_TOKEN or Databricks CLI auth) must be configured for Genie.")
         return
 
-    mode = st.radio(
-        "Mode",
-        options=["Chat", "Research Agent"],
-        horizontal=True,
-        help="Chat: direct answer. Research Agent: multi-step investigation and synthesis.",
-    )
-
-    left, right = st.columns([1.35, 1])
-    with right:
-        st.checkbox(
-            "Use proxy fallback (advanced)",
-            key="light_use_proxy_fallback",
-            value=DEFAULT_USE_PROXY_FALLBACK,
-            help=(
-                "Disabled by default because corporate proxies can block Genie tunnel requests "
-                "with 403. Enable only if direct networking fails."
-            ),
+    mode_col, reset_col = st.columns([4, 1])
+    with mode_col:
+        mode = st.radio(
+            "Mode",
+            options=["Chat", "Research Agent"],
+            horizontal=True,
+            label_visibility="collapsed",
+            help="Chat: direct answer. Research Agent: multi-step investigation and synthesis.",
         )
-
-        if st.button("Run connectivity check", use_container_width=True):
-            with st.spinner("Running connectivity checks..."):
-                ok, diagnostics = _run_connectivity_check()
-            if ok:
-                st.success("Connectivity check passed")
-            else:
-                st.error("Connectivity check failed")
-            st.json(diagnostics)
-
-        _render_question_chips(mode)
-        if st.button("Reset conversation", use_container_width=True):
+    with reset_col:
+        if st.button("Reset conversation"):
             st.session_state.light_conversation_id = None
             st.session_state.light_prefill_prompt = ""
             _append_debug("Conversation reset by user")
             st.rerun()
 
-        with st.expander("Debug logs", expanded=False):
-            if st.session_state.light_debug_logs:
-                st.code("\n".join(st.session_state.light_debug_logs[-80:]))
-            else:
-                st.caption("No debug logs yet.")
-            if st.button("Clear debug logs", use_container_width=True):
-                st.session_state.light_debug_logs = []
-                st.rerun()
+    _render_question_chips(mode)
 
-    with left:
-        prompt = st.chat_input(
-            "Ask a finance question...",
-            key="lightweight_chat_input",
-        )
+    st.markdown("---")
 
-        effective_prompt = prompt or st.session_state.light_prefill_prompt
-        if effective_prompt:
-            st.session_state.light_prefill_prompt = ""
-            if mode == "Chat":
-                _render_chat_mode(effective_prompt)
-            else:
-                _render_research_mode(effective_prompt)
+    prompt = st.chat_input(
+        "Ask a finance question...",
+        key="lightweight_chat_input",
+    )
+
+    effective_prompt = prompt or st.session_state.light_prefill_prompt
+    if effective_prompt:
+        st.session_state.light_prefill_prompt = ""
+        if mode == "Chat":
+            _render_chat_mode(effective_prompt)
+        else:
+            _render_research_mode(effective_prompt)
