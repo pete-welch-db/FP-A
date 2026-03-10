@@ -18,7 +18,7 @@ def render():
 
     st.subheader("App Mode")
 
-    current_mode = st.session_state.get("confirmed_app_mode", "Lightweight")
+    current_mode = st.session_state.get("confirmed_app_mode", "Full")
     options = ["Lightweight", "Full"]
     selected = st.selectbox(
         "App Mode",

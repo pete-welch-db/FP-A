@@ -90,7 +90,7 @@ LITE_PAGES = [
     ("Reference Architecture", ref_arch, "reference-architecture"),
 ]
 
-active_pages = FULL_PAGES if st.session_state.get("confirmed_app_mode") == "Full" else LITE_PAGES
+active_pages = LITE_PAGES if st.session_state.get("confirmed_app_mode") == "Lightweight" else FULL_PAGES
 
 settings_page = st.Page(settings, title="Settings", url_path="settings", icon=":material/settings:")
 
