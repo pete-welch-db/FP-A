@@ -74,6 +74,59 @@ def region_multiplier(region: str) -> float:
     weights = {"Americas": 1.0, "Europe": 0.70, "Asia": 0.45, "India": 0.25}
     return weights.get(region, 0.5)
 
+
+# BU-specific economics (monthly base revenue per leaf account in USD)
+BU_PROFILES = {
+    "Injection Molding": {
+        "revenue_base": 900_000,    # largest BU
+        "cogs_pct": 0.62,
+        "opex_pct": 0.18,
+        "yoy_growth": 0.04,         # mature, steady
+        "region_skew": {"Americas": 1.0, "Europe": 0.80, "Asia": 0.55, "India": 0.20},
+    },
+    "Extrusion": {
+        "revenue_base": 520_000,
+        "cogs_pct": 0.58,
+        "opex_pct": 0.22,
+        "yoy_growth": 0.03,         # slow grower
+        "region_skew": {"Americas": 1.0, "Europe": 0.90, "Asia": 0.35, "India": 0.15},
+    },
+    "Hot Runners": {
+        "revenue_base": 350_000,
+        "cogs_pct": 0.45,
+        "opex_pct": 0.20,
+        "yoy_growth": 0.09,         # high growth, high margin
+        "region_skew": {"Americas": 0.85, "Europe": 1.0, "Asia": 0.60, "India": 0.30},
+    },
+    "Aftermarket & Service": {
+        "revenue_base": 420_000,
+        "cogs_pct": 0.38,
+        "opex_pct": 0.25,
+        "yoy_growth": 0.12,         # fastest growing, high margin
+        "region_skew": {"Americas": 1.0, "Europe": 0.65, "Asia": 0.40, "India": 0.35},
+    },
+}
+
+# Revenue leaf accounts and their share of total BU revenue
+REV_ACCOUNT_SHARES = {"REV_PROD": 0.60, "REV_SVC": 0.25, "REV_PARTS": 0.15}
+COGS_ACCOUNT_SHARES = {"COGS_MAT": 0.45, "COGS_LAB": 0.30, "COGS_OH": 0.18, "COGS_WAR": 0.07}
+OPEX_ACCOUNT_SHARES = {"OPEX_SGA": 0.50, "OPEX_RD": 0.30, "OPEX_DA": 0.20}
+
+# Map account_group codes to their share dicts
+ACCT_GROUP_SHARES = {**REV_ACCOUNT_SHARES, **COGS_ACCOUNT_SHARES, **OPEX_ACCOUNT_SHARES}
+
+# Plant-specific utilization profiles
+PLANT_PROFILES = {
+    "P01": {"utilization_base": 0.82, "cost_efficiency": 1.00, "scrap_base": 0.025},
+    "P02": {"utilization_base": 0.75, "cost_efficiency": 1.05, "scrap_base": 0.032},
+    "P03": {"utilization_base": 0.88, "cost_efficiency": 0.85, "scrap_base": 0.028},
+    "P04": {"utilization_base": 0.90, "cost_efficiency": 1.10, "scrap_base": 0.018},
+    "P05": {"utilization_base": 0.78, "cost_efficiency": 1.08, "scrap_base": 0.022},
+    "P06": {"utilization_base": 0.85, "cost_efficiency": 0.75, "scrap_base": 0.038},
+    "P07": {"utilization_base": 0.92, "cost_efficiency": 0.80, "scrap_base": 0.020},
+    "P08": {"utilization_base": 0.88, "cost_efficiency": 0.95, "scrap_base": 0.015},
+}
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -309,25 +362,51 @@ months = pd.date_range("2023-01-01", "2026-02-28", freq="MS")
 # COMMAND ----------
 
 # ── fact_gl_journal ─────────────────────────────────────────────────────
-# One row per entity × leaf account × month × scenario
+# One row per entity × leaf account × month × scenario.
+# Revenue/cost levels are driven by BU-specific profiles so each BU has
+# a distinct size, margin structure, and growth trajectory.
 print("Generating GL journal entries...")
+
+# Build account_group lookup
+account_group_map = dict(zip(df_account["account_id"], df_account["account_group"]))
+scenario_name_map = dict(zip(df_scenario["scenario_id"], df_scenario["scenario_name"]))
+
 gl_rows = []
 jid = 1
 for m in months:
     time_id = m.strftime("%Y%m%d")
     sf = seasonal_factor(m.month)
-    yr_trend = 1.06 ** (m.year - 2023)  # 6% compounding YoY growth
     for eid in entity_ids:
-        rm = region_multiplier(entity_region[eid])
+        bu = entity_bu[eid]
+        region = entity_region[eid]
+        prof = BU_PROFILES[bu]
+
+        yr_trend = (1 + prof["yoy_growth"]) ** (m.year - 2023)
+        rm = prof["region_skew"].get(region, 0.3)
+        total_rev = prof["revenue_base"] * sf * rm * yr_trend
+
         for aid in account_leaf_ids:
             at = account_type_map[aid]
+            ag = account_group_map[aid]
+
+            if at == "Revenue":
+                share = ACCT_GROUP_SHARES.get(ag, 0.33)
+                base_amount = total_rev * share
+            elif at == "COGS":
+                share = ACCT_GROUP_SHARES.get(ag, 0.25)
+                base_amount = total_rev * prof["cogs_pct"] * share
+            elif at == "OpEx":
+                share = ACCT_GROUP_SHARES.get(ag, 0.33)
+                base_amount = total_rev * prof["opex_pct"] * share
+            else:
+                base_amount = total_rev * 0.10
+
             for sid in [s for s in scenario_ids if str(m.year) in s]:
-                base = 250_000 if at == "Revenue" else 180_000 if at == "COGS" else 50_000
-                scenario_factor = {"Actual": 1.0, "Budget": 0.98, "Forecast": 1.02,
-                                   "Upside": 1.08, "Downside": 0.92}.get(
-                    df_scenario[df_scenario["scenario_id"] == sid]["scenario_name"].iloc[0], 1.0
-                )
-                amount = base * sf * rm * yr_trend * scenario_factor * np.random.uniform(0.90, 1.10)
+                sname = scenario_name_map.get(sid, "Actual")
+                scenario_factor = {"Actual": 1.0, "Budget": 0.97, "Forecast": 1.03,
+                                   "Upside": 1.10, "Downside": 0.88}.get(sname, 1.0)
+                noise = np.random.uniform(0.88, 1.12)
+                amount = base_amount * scenario_factor * noise
                 gl_rows.append({
                     "journal_id": f"J{jid:08d}",
                     "entity_id": eid, "account_id": aid,
@@ -335,7 +414,7 @@ for m in months:
                     "flow_type": "Operating",
                     "intercompany_entity_id": "",
                     "amount_local": round(amount, 2),
-                    "amount_usd": round(amount, 2),  # FX normalised in silver
+                    "amount_usd": round(amount, 2),
                     "currency_code": "USD",
                 })
                 jid += 1
@@ -347,30 +426,48 @@ write_csv(df_gl, "gl_journal_2023_2026.csv")
 
 # ── fact_orders ─────────────────────────────────────────────────────────
 print("Generating order data...")
+ORDER_PRICING = {
+    "Injection Molding": (80_000, 600_000),
+    "Extrusion":         (40_000, 350_000),
+    "Hot Runners":       (8_000, 120_000),
+    "Aftermarket & Service": (2_000, 80_000),
+}
+ORDER_VOLUMES = {
+    "Injection Molding": 180,
+    "Extrusion": 140,
+    "Hot Runners": 200,
+    "Aftermarket & Service": 250,
+}
+
 order_rows = []
 oid = 1
 for m in months:
     time_id = m.strftime("%Y%m%d")
     sf = seasonal_factor(m.month)
-    for _ in range(int(600 * sf)):
-        eid = random.choice(entity_ids)
-        rm = region_multiplier(entity_region[eid])
-        qty = max(1, int(np.random.poisson(5) * rm))
-        price = round(np.random.uniform(5_000, 500_000) * rm, 2)
-        disc = round(np.random.beta(2, 10) * 0.25, 4)
-        status = np.random.choice(["Open", "Shipped", "Cancelled"], p=[0.20, 0.72, 0.08])
-        order_rows.append({
-            "order_id": f"O{oid:08d}", "entity_id": eid,
-            "customer_id": random.choice(customer_ids),
-            "product_id": random.choice(product_ids),
-            "time_id": time_id, "order_qty": qty,
-            "unit_price": price,
-            "discount_pct": disc,
-            "net_amount_usd": round(qty * price * (1 - disc), 2),
-            "order_status": status,
-            "backlog_flag": status == "Open",
-        })
-        oid += 1
+    for bu in BUS:
+        bu_entities = [e for e in entity_ids if entity_bu[e] == bu]
+        n_orders = int(ORDER_VOLUMES[bu] * sf)
+        price_lo, price_hi = ORDER_PRICING[bu]
+        yr_trend = (1 + BU_PROFILES[bu]["yoy_growth"]) ** (m.year - 2023)
+        for _ in range(n_orders):
+            eid = random.choice(bu_entities)
+            rm = BU_PROFILES[bu]["region_skew"].get(entity_region[eid], 0.3)
+            qty = max(1, int(np.random.poisson(3 if bu == "Injection Molding" else 8) * rm))
+            price = round(np.random.uniform(price_lo, price_hi) * rm * yr_trend, 2)
+            disc = round(np.random.beta(2, 10) * 0.25, 4)
+            status = np.random.choice(["Open", "Shipped", "Cancelled"], p=[0.18, 0.74, 0.08])
+            order_rows.append({
+                "order_id": f"O{oid:08d}", "entity_id": eid,
+                "customer_id": random.choice(customer_ids),
+                "product_id": random.choice(product_ids),
+                "time_id": time_id, "order_qty": qty,
+                "unit_price": price,
+                "discount_pct": disc,
+                "net_amount_usd": round(qty * price * (1 - disc), 2),
+                "order_status": status,
+                "backlog_flag": status == "Open",
+            })
+            oid += 1
 
 df_orders = pd.DataFrame(order_rows)
 write_csv(df_orders, "orders_2023_2026.csv")
@@ -381,27 +478,34 @@ write_csv(df_orders, "orders_2023_2026.csv")
 print("Generating production data...")
 prod_rows = []
 prid = 1
-prod_cc_ids = df_cost_center[df_cost_center["cost_center_name"].str.contains("Production")]["cost_center_id"].tolist()
+prod_cc_map = {}
+for _, row in df_cost_center[df_cost_center["cost_center_name"].str.contains("Production")].iterrows():
+    prod_cc_map[row["cost_center_id"]] = row["plant_id"]
+prod_cc_ids = list(prod_cc_map.keys())
 sample_products = random.sample(product_ids, min(50, len(product_ids)))
 
 for m in months:
     time_id = m.strftime("%Y%m%d")
     sf = seasonal_factor(m.month)
+    yr_improve = 1.0 + 0.01 * (m.year - 2023)  # gradual efficiency gain
     for ccid in prod_cc_ids:
+        plant_id = prod_cc_map[ccid]
+        pp = PLANT_PROFILES.get(plant_id, {"utilization_base": 0.78, "cost_efficiency": 1.0, "scrap_base": 0.025})
         for pid in sample_products:
-            units = max(0, int(np.random.poisson(120) * sf))
-            std_cost = round(np.random.uniform(800, 15000), 2)
-            actual_cost = round(std_cost * np.random.uniform(0.92, 1.12), 2)
-            util = round(min(1.0, max(0.3, np.random.normal(0.78, 0.10) * sf)), 4)
+            units = max(0, int(np.random.poisson(120) * sf * pp["utilization_base"]))
+            std_cost = round(np.random.uniform(800, 15000) * pp["cost_efficiency"], 2)
+            variance = np.random.normal(0, 0.06)
+            actual_cost = round(std_cost * (1 + variance), 2)
+            util = round(min(1.0, max(0.3, np.random.normal(pp["utilization_base"], 0.06) * sf * yr_improve)), 4)
             prod_rows.append({
                 "production_id": f"PR{prid:08d}",
                 "cost_center_id": ccid, "product_id": pid,
                 "time_id": time_id, "units_produced": units,
                 "standard_cost": std_cost, "actual_cost": actual_cost,
                 "utilization_pct": util,
-                "energy_cost": round(units * np.random.uniform(5, 25), 2),
+                "energy_cost": round(units * np.random.uniform(5, 25) * pp["cost_efficiency"], 2),
                 "material_cost": round(units * np.random.uniform(200, 5000), 2),
-                "scrap_rate": round(np.random.beta(2, 30), 4),
+                "scrap_rate": round(max(0, np.random.normal(pp["scrap_base"], 0.008)), 4),
             })
             prid += 1
 
@@ -412,31 +516,45 @@ write_csv(df_production, "production_2023_2026.csv")
 
 # ── fact_service ────────────────────────────────────────────────────────
 print("Generating service/aftermarket data...")
+SVC_PROFILES = {
+    "Injection Molding":       {"volume": 60, "value_range": (15_000, 180_000), "attach": 0.70, "churn": 0.05},
+    "Extrusion":               {"volume": 40, "value_range": (10_000, 120_000), "attach": 0.55, "churn": 0.08},
+    "Hot Runners":             {"volume": 35, "value_range": (5_000, 60_000),   "attach": 0.48, "churn": 0.10},
+    "Aftermarket & Service":   {"volume": 90, "value_range": (3_000, 90_000),   "attach": 0.80, "churn": 0.04},
+}
 svc_rows = []
 svid = 1
 contract_types = ["Full Service", "Parts Only", "IIoT Monitoring"]
 
 for m in months:
     time_id = m.strftime("%Y%m%d")
-    for _ in range(int(150 * seasonal_factor(m.month))):
-        eid = random.choice(entity_ids)
-        ct = random.choice(contract_types)
-        cv = round(np.random.uniform(5_000, 120_000), 2)
-        svc_rows.append({
-            "service_id": f"SV{svid:08d}",
-            "entity_id": eid,
-            "customer_id": random.choice(customer_ids),
-            "product_id": random.choice(product_ids),
-            "time_id": time_id,
-            "contract_type": ct,
-            "contract_value_usd": cv,
-            "parts_revenue_usd": round(cv * np.random.uniform(0.3, 0.6), 2),
-            "labor_revenue_usd": round(cv * np.random.uniform(0.1, 0.35), 2),
-            "is_renewal": random.random() < 0.45,
-            "churn_flag": random.random() < 0.08,
-            "service_attach_flag": random.random() < 0.62,
-        })
-        svid += 1
+    sf = seasonal_factor(m.month)
+    for bu in BUS:
+        sp = SVC_PROFILES[bu]
+        bu_entities = [e for e in entity_ids if entity_bu[e] == bu]
+        yr_growth = (1 + BU_PROFILES[bu]["yoy_growth"]) ** (m.year - 2023)
+        n = int(sp["volume"] * sf * yr_growth)
+        vlo, vhi = sp["value_range"]
+        for _ in range(n):
+            eid = random.choice(bu_entities)
+            rm = BU_PROFILES[bu]["region_skew"].get(entity_region[eid], 0.3)
+            ct = random.choice(contract_types)
+            cv = round(np.random.uniform(vlo, vhi) * rm * yr_growth, 2)
+            svc_rows.append({
+                "service_id": f"SV{svid:08d}",
+                "entity_id": eid,
+                "customer_id": random.choice(customer_ids),
+                "product_id": random.choice(product_ids),
+                "time_id": time_id,
+                "contract_type": ct,
+                "contract_value_usd": cv,
+                "parts_revenue_usd": round(cv * np.random.uniform(0.3, 0.6), 2),
+                "labor_revenue_usd": round(cv * np.random.uniform(0.1, 0.35), 2),
+                "is_renewal": random.random() < 0.45,
+                "churn_flag": random.random() < sp["churn"],
+                "service_attach_flag": random.random() < sp["attach"],
+            })
+            svid += 1
 
 df_service = pd.DataFrame(svc_rows)
 write_csv(df_service, "service_2023_2026.csv")
@@ -445,20 +563,35 @@ write_csv(df_service, "service_2023_2026.csv")
 
 # ── fact_working_capital ────────────────────────────────────────────────
 print("Generating working capital snapshots...")
+WC_PROFILES = {
+    "Injection Molding":     {"dso_base": 52, "dpo_base": 42, "inv_scale": 1.2},
+    "Extrusion":             {"dso_base": 48, "dpo_base": 38, "inv_scale": 1.0},
+    "Hot Runners":           {"dso_base": 38, "dpo_base": 45, "inv_scale": 0.6},
+    "Aftermarket & Service": {"dso_base": 60, "dpo_base": 35, "inv_scale": 0.4},
+}
 wc_rows = []
 wcid = 1
 for m in months:
     time_id = m.strftime("%Y%m%d")
+    sf = seasonal_factor(m.month)
     for eid in entity_ids:
-        rm = region_multiplier(entity_region[eid])
-        ar = round(np.random.uniform(2e6, 15e6) * rm, 2)
-        ap = round(np.random.uniform(1.5e6, 10e6) * rm, 2)
-        inv_raw = round(np.random.uniform(1e6, 6e6) * rm, 2)
-        inv_wip = round(np.random.uniform(0.5e6, 3e6) * rm, 2)
-        inv_fin = round(np.random.uniform(0.8e6, 5e6) * rm, 2)
-        revenue_proxy = 20e6 * rm * seasonal_factor(m.month)
-        cogs_proxy = revenue_proxy * 0.65
-        days = 30
+        bu = entity_bu[eid]
+        region = entity_region[eid]
+        rm = BU_PROFILES[bu]["region_skew"].get(region, 0.3)
+        wcp = WC_PROFILES[bu]
+
+        revenue_proxy = BU_PROFILES[bu]["revenue_base"] * rm * sf * 3
+        cogs_proxy = revenue_proxy * BU_PROFILES[bu]["cogs_pct"]
+
+        dso_val = wcp["dso_base"] + np.random.normal(0, 5)
+        dpo_val = wcp["dpo_base"] + np.random.normal(0, 4)
+        ar = round(revenue_proxy * dso_val / 30, 2)
+        ap = round(cogs_proxy * dpo_val / 30, 2)
+        inv_raw = round(np.random.uniform(1e6, 6e6) * rm * wcp["inv_scale"], 2)
+        inv_wip = round(np.random.uniform(0.5e6, 3e6) * rm * wcp["inv_scale"], 2)
+        inv_fin = round(np.random.uniform(0.8e6, 5e6) * rm * wcp["inv_scale"], 2)
+        total_inv = inv_raw + inv_wip + inv_fin
+
         wc_rows.append({
             "wc_id": f"WC{wcid:08d}", "entity_id": eid,
             "time_id": time_id,
@@ -471,9 +604,9 @@ for m in months:
             "inventory_raw": inv_raw,
             "inventory_wip": inv_wip,
             "inventory_finished": inv_fin,
-            "dso": round(ar / revenue_proxy * days, 1) if revenue_proxy else 0,
-            "dpo": round(ap / cogs_proxy * days, 1) if cogs_proxy else 0,
-            "inventory_turns": round(cogs_proxy / (inv_raw + inv_wip + inv_fin) * 12, 2) if (inv_raw + inv_wip + inv_fin) else 0,
+            "dso": round(max(10, dso_val), 1),
+            "dpo": round(max(10, dpo_val), 1),
+            "inventory_turns": round(cogs_proxy / total_inv * 12, 2) if total_inv else 0,
         })
         wcid += 1
 

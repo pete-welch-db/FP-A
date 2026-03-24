@@ -22,10 +22,10 @@ def render():
     # --- Aftermarket Mix ---
     am_df = run_query(f"""
         SELECT business_unit, region, fiscal_quarter,
-               SUM(aftermarket_revenue) AS am_rev,
-               SUM(total_revenue) AS total_rev,
-               AVG(aftermarket_mix_pct) AS am_mix,
-               AVG(service_attach_rate) AS attach_rate
+               SUM(aftermarket_revenue) AS aftermarket_revenue,
+               SUM(total_revenue) AS total_revenue,
+               AVG(aftermarket_mix_pct) AS aftermarket_mix_pct,
+               AVG(service_attach_rate) AS service_attach_rate
         FROM {fq('gold_aftermarket_mix')}
         WHERE business_unit IN ({bu_filter})
           AND region IN ({region_filter})
@@ -35,22 +35,20 @@ def render():
     """, mock_key="aftermarket")
 
     if not am_df.empty:
-        # KPIs
         c1, c2, c3 = st.columns(3)
         with c1:
-            render_kpi_card("Aftermarket Revenue", fmt_currency(am_df["am_rev"].sum()))
+            render_kpi_card("Aftermarket Revenue", fmt_currency(am_df["aftermarket_revenue"].sum()))
         with c2:
-            render_kpi_card("Avg Aftermarket Mix", fmt_pct(am_df["am_mix"].mean()))
+            render_kpi_card("Avg Aftermarket Mix", fmt_pct(am_df["aftermarket_mix_pct"].mean()))
         with c3:
-            render_kpi_card("Avg Service Attach Rate", fmt_pct(am_df["attach_rate"].mean() * 100))
+            render_kpi_card("Avg Service Attach Rate", fmt_pct(am_df["service_attach_rate"].mean() * 100))
 
         st.markdown("---")
 
-        # Aftermarket mix by region
         col1, col2 = st.columns(2)
         with col1:
-            region_mix = am_df.groupby("region").agg({"am_rev": "sum", "total_rev": "sum"}).reset_index()
-            region_mix["mix_pct"] = region_mix["am_rev"] / region_mix["total_rev"] * 100
+            region_mix = am_df.groupby("region").agg({"aftermarket_revenue": "sum", "total_revenue": "sum"}).reset_index()
+            region_mix["mix_pct"] = region_mix["aftermarket_revenue"] / region_mix["total_revenue"] * 100
             fig = px.bar(
                 region_mix, x="region", y="mix_pct",
                 title="Aftermarket Mix by Region (%)",
@@ -63,8 +61,8 @@ def render():
 
         with col2:
             fig = px.line(
-                am_df.groupby("fiscal_quarter").agg({"am_mix": "mean"}).reset_index(),
-                x="fiscal_quarter", y="am_mix",
+                am_df.groupby("fiscal_quarter").agg({"aftermarket_mix_pct": "mean"}).reset_index(),
+                x="fiscal_quarter", y="aftermarket_mix_pct",
                 title="Aftermarket Mix Trend",
                 markers=True, color_discrete_sequence=["#FF3621"],
             )
@@ -73,9 +71,9 @@ def render():
 
         # Service attach rate by BU
         st.subheader("Service Attach Rate by Business Unit")
-        attach_by_bu = am_df.groupby("business_unit").agg({"attach_rate": "mean"}).reset_index()
+        attach_by_bu = am_df.groupby("business_unit").agg({"service_attach_rate": "mean"}).reset_index()
         fig = px.bar(
-            attach_by_bu, x="business_unit", y="attach_rate",
+            attach_by_bu, x="business_unit", y="service_attach_rate",
             title="Avg Service Attach Rate",
             color_discrete_sequence=["#1565C0"],
         )
@@ -90,9 +88,9 @@ def render():
     st.subheader("Order Backlog & Book-to-Bill")
     backlog_df = run_query(f"""
         SELECT business_unit, fiscal_month,
-               SUM(order_intake) AS intake,
-               SUM(backlog_value) AS backlog,
-               AVG(book_to_bill_ratio) AS btb
+               SUM(order_intake) AS order_intake,
+               SUM(backlog_value) AS backlog_value,
+               AVG(book_to_bill_ratio) AS book_to_bill_ratio
         FROM {fq('gold_order_backlog')}
         WHERE business_unit IN ({bu_filter})
           AND region IN ({region_filter})
@@ -103,7 +101,7 @@ def render():
 
     if not backlog_df.empty:
         fig = px.line(
-            backlog_df, x="fiscal_month", y="btb", color="business_unit",
+            backlog_df, x="fiscal_month", y="book_to_bill_ratio", color="business_unit",
             title="Book-to-Bill Ratio by BU",
             markers=True,
         )

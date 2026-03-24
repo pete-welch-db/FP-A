@@ -126,6 +126,11 @@ resources:
       file_path: resources/dashboards/nova_molding_fpa_metrics_v2.lvdash.json
       warehouse_id: ${var.warehouse_id}
       embed_credentials: true
+    milacron_fpa_metrics_v2:
+      display_name: "Milacron FP&A Executive Dashboard"
+      file_path: resources/dashboards/milacron_fpa_metrics_v2.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      embed_credentials: true
 
   apps:
     nova_molding_fpa_lightweight_app:

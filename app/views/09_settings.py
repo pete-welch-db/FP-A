@@ -2,13 +2,14 @@
 Nova Molding Systems FP&A — Settings
 Network diagnostics, proxy configuration, and debug logs.
 """
+import os
 import socket
 from importlib import import_module
 from urllib.parse import urlparse
 
 import streamlit as st
 
-from config import DATABRICKS_HOST, GENIE_SPACE_ID
+from config import DATABRICKS_HOST, DATABRICKS_HTTP_PATH, DATABRICKS_CATALOG, DATABRICKS_SCHEMA, GENIE_SPACE_ID, BRAND_CONFIG, get_brand
 
 _genie_mod = import_module("views.02_lightweight_genie")
 
@@ -36,6 +37,23 @@ def render():
 
     st.markdown("---")
 
+    st.subheader("Branding")
+    brand_options = list(BRAND_CONFIG)
+    current_brand = st.session_state.get("brand", "Nova Molding Systems")
+    brand = st.radio(
+        "Customer Brand",
+        options=brand_options,
+        index=brand_options.index(current_brand),
+        horizontal=True,
+    )
+    if brand != current_brand:
+        st.session_state["brand"] = brand
+        st.rerun()
+    else:
+        st.caption(f"Currently showing **{current_brand}** branding.")
+
+    st.markdown("---")
+
     st.subheader("Network & Proxy")
 
     st.checkbox(
@@ -59,6 +77,15 @@ def render():
             st.error("Connectivity check failed")
         st.json(diagnostics)
 
+    if st.button("Run SQL connectivity check", use_container_width=False):
+        with st.spinner("Testing SQL connection..."):
+            sql_diag = _run_sql_check()
+        if sql_diag.get("success"):
+            st.success("SQL query succeeded")
+        else:
+            st.error("SQL query failed")
+        st.json(sql_diag)
+
     st.subheader("Debug Logs")
 
     if "light_debug_logs" not in st.session_state:
@@ -74,6 +101,33 @@ def render():
         st.rerun()
 
 
+def _run_sql_check() -> dict:
+    """Try a simple SQL query and report detailed diagnostics."""
+    from components.data_loader import _open_connection, _normalize_host
+    info: dict = {
+        "host": DATABRICKS_HOST,
+        "http_path": DATABRICKS_HTTP_PATH,
+        "catalog": DATABRICKS_CATALOG,
+        "schema": DATABRICKS_SCHEMA,
+        "has_token": bool(os.getenv("DATABRICKS_TOKEN")),
+        "has_client_id": bool(os.getenv("DATABRICKS_CLIENT_ID")),
+        "has_client_secret": bool(os.getenv("DATABRICKS_CLIENT_SECRET")),
+    }
+    try:
+        conn = _open_connection()
+        info["connection"] = "OK"
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT 1 AS ping FROM {DATABRICKS_CATALOG}.{DATABRICKS_SCHEMA}.gold_revenue_summary LIMIT 1")
+            row = cur.fetchone()
+            info["query_result"] = str(row)
+            info["success"] = True
+        conn.close()
+    except Exception as exc:
+        info["error"] = f"{type(exc).__name__}: {exc}"
+        info["success"] = False
+    return info
+
+
 def _run_connectivity_check() -> tuple[bool, dict]:
     _api_request = _genie_mod._api_request
     _genie_base_url = _genie_mod._genie_base_url
@@ -81,7 +135,7 @@ def _run_connectivity_check() -> tuple[bool, dict]:
 
     diagnostics: dict = {
         "host": DATABRICKS_HOST,
-        "space_id": GENIE_SPACE_ID,
+        "space_id": get_brand("genie_space_id"),
     }
     try:
         parsed = urlparse(DATABRICKS_HOST)

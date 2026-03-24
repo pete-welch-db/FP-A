@@ -6,7 +6,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from urllib.parse import parse_qsl, urlencode, urlparse
 
-from config import DATABRICKS_HOST, DASHBOARD_EMBED_URL, DASHBOARD_EMBED_URL_V2
+from config import DATABRICKS_HOST, DASHBOARD_EMBED_URL, DASHBOARD_EMBED_URL_V2, get_brand
 
 
 def _normalize_dashboard_url(raw_value: str) -> str:
@@ -42,10 +42,11 @@ def _normalize_dashboard_url(raw_value: str) -> str:
 
 
 def render():
+    brand = get_brand()
     st.title("Executive Summary")
-    st.caption("AI/BI Dashboard — Nova Molding Systems FP&A")
+    st.caption(brand["dashboard_subtitle"])
 
-    embed_url = _normalize_dashboard_url(DASHBOARD_EMBED_URL_V2 or DASHBOARD_EMBED_URL)
+    embed_url = _normalize_dashboard_url(brand["dashboard_embed_url"])
     if not embed_url:
         st.warning(
             "Dashboard embed URL is not configured. "

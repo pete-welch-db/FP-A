@@ -1,0 +1,24 @@
+{
+  "name": "fp-a",
+  "version": "1.0.0",
+  "description": "This repository contains a customer-ready FP&A demo built on Databricks:",
+  "main": "browser_test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pete-welch-db/FP-A.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/pete-welch-db/FP-A/issues"
+  },
+  "homepage": "https://github.com/pete-welch-db/FP-A#readme",
+  "devDependencies": {
+    "playwright": "^1.58.2"
+  }
+}

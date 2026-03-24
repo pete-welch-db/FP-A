@@ -11,7 +11,7 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from config import DATABRICKS_HOST, DATABRICKS_TOKEN, GENIE_SPACE_ID
+from config import DATABRICKS_HOST, DATABRICKS_TOKEN, GENIE_SPACE_ID, get_brand
 
 try:
     from databricks.sdk.core import Config
@@ -26,9 +26,14 @@ def _get_token() -> str:
         return DATABRICKS_TOKEN
     if SDK_AVAILABLE:
         try:
-            auth = Config().authenticate()
-            if auth and "Authorization" in auth:
-                return auth["Authorization"].replace("Bearer ", "").strip()
+            try:
+                cfg = Config()
+            except Exception:
+                cfg = Config(host=DATABRICKS_HOST)
+            header_factory = cfg.authenticate
+            headers = header_factory()
+            if isinstance(headers, dict) and "Authorization" in headers:
+                return headers["Authorization"].replace("Bearer ", "").strip()
         except Exception:
             pass
     return ""
@@ -214,14 +219,15 @@ def _api_request(method: str, url: str, payload: dict | None = None) -> dict:
 
 
 def _genie_base_url() -> str:
-    return f"{DATABRICKS_HOST.rstrip('/')}/api/2.0/genie/spaces/{GENIE_SPACE_ID}"
+    space_id = get_brand("genie_space_id") or GENIE_SPACE_ID
+    return f"{DATABRICKS_HOST.rstrip('/')}/api/2.0/genie/spaces/{space_id}"
 
 
 def _run_connectivity_check() -> tuple[bool, dict]:
     """Run DNS + API checks and return structured diagnostics."""
     diagnostics: dict = {
         "host": DATABRICKS_HOST,
-        "space_id": GENIE_SPACE_ID,
+        "space_id": get_brand("genie_space_id") or GENIE_SPACE_ID,
     }
     try:
         parsed = urlparse(DATABRICKS_HOST)
@@ -504,7 +510,8 @@ def render():
     if "light_debug_logs" not in st.session_state:
         st.session_state.light_debug_logs = []
 
-    if not GENIE_SPACE_ID:
+    active_space_id = get_brand("genie_space_id") or GENIE_SPACE_ID
+    if not active_space_id:
         st.warning(
             "GENIE_SPACE_ID is not configured. Set it in app.yaml or .env to enable this page."
         )

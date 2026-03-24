@@ -3,6 +3,7 @@ Nova Molding Systems FP&A — Data Loader
 Centralised SQL execution with connection pooling, caching, numeric
 coercion, and graceful fallback to mock data.
 """
+import logging
 import streamlit as st
 import pandas as pd
 from databricks import sql
@@ -18,6 +19,8 @@ from config import (
 )
 from data.mock_data import MOCK_REGISTRY
 
+_log = logging.getLogger(__name__)
+
 
 def _normalize_host(host: str) -> str:
     host = (host or "").strip()
@@ -28,22 +31,30 @@ def _normalize_host(host: str) -> str:
     return host.rstrip("/")
 
 
-@st.cache_resource(ttl=300, show_spinner=False)
-def _get_connection():
-    # Local-first auth: use explicit PAT from env/.env when available.
-    if DATABRICKS_TOKEN and DATABRICKS_HOST and DATABRICKS_HTTP_PATH:
-        return sql.connect(
-            server_hostname=_normalize_host(DATABRICKS_HOST),
-            http_path=DATABRICKS_HTTP_PATH,
-            access_token=DATABRICKS_TOKEN,
-        )
+def _get_oauth_token() -> str:
+    """Obtain an OAuth token from SDK Config (service principal M2M)."""
+    try:
+        cfg = Config()
+    except Exception:
+        cfg = Config(host=DATABRICKS_HOST)
+    headers = cfg.authenticate()
+    return headers.get("Authorization", "").replace("Bearer ", "").strip()
 
-    # Fallback to Databricks unified auth/CLI profile.
-    cfg = Config()
+
+def _open_connection():
+    """Create a fresh SQL connection."""
+    hostname = _normalize_host(DATABRICKS_HOST)
+
+    token = DATABRICKS_TOKEN or _get_oauth_token()
+    if not token:
+        raise RuntimeError("No Databricks token available (PAT or OAuth).")
+
+    _log.info("Connecting to %s with %s auth",
+              hostname, "PAT" if DATABRICKS_TOKEN else "OAuth/SP")
     return sql.connect(
-        server_hostname=_normalize_host(cfg.host or DATABRICKS_HOST),
+        server_hostname=hostname,
         http_path=DATABRICKS_HTTP_PATH,
-        credentials_provider=cfg.authenticate,
+        access_token=token,
     )
 
 
@@ -58,6 +69,20 @@ def _coerce_numerics(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _execute(query: str) -> pd.DataFrame:
+    """Open a connection, run one query, close it. Avoids stale connection issues."""
+    conn = _open_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            return _coerce_numerics(cursor.fetchall_arrow().to_pandas())
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
 def run_query(query: str, mock_key: str | None = None) -> pd.DataFrame:
     """Execute a SQL query and return a pandas DataFrame.
 
@@ -67,12 +92,9 @@ def run_query(query: str, mock_key: str | None = None) -> pd.DataFrame:
         return _mock_fallback(mock_key)
 
     try:
-        conn = _get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchall_arrow().to_pandas()
-        return _coerce_numerics(result)
+        return _execute(query)
     except Exception as exc:
+        _log.warning("Live query failed: %s", exc, exc_info=True)
         st.warning(f"Live query failed — showing mock data. ({exc})")
         return _mock_fallback(mock_key)
 

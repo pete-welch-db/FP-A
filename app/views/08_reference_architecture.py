@@ -15,7 +15,10 @@ def render():
     st.caption("Databricks FP&A platform architecture overview")
 
     if _ARCH_IMAGE.exists():
-        st.image(str(_ARCH_IMAGE), use_container_width=True)
+        try:
+            st.image(str(_ARCH_IMAGE), use_container_width=True)
+        except TypeError:
+            st.image(str(_ARCH_IMAGE))
     else:
         st.warning(
             f"Reference architecture image not found at: {_ARCH_IMAGE}"

@@ -12,41 +12,55 @@ BUS = ["Injection Molding", "Extrusion", "Hot Runners", "Aftermarket & Service"]
 REGIONS = ["Americas", "Europe", "Asia", "India"]
 QUARTERS = ["Q1", "Q2", "Q3", "Q4"]
 
+_BU_PROFILES = {
+    "Injection Molding":     {"base": 90, "cogs_pct": 0.62, "opex_pct": 0.18, "growth": 0.04,
+                              "region": {"Americas": 1.0, "Europe": 0.80, "Asia": 0.55, "India": 0.20}},
+    "Extrusion":             {"base": 52, "cogs_pct": 0.58, "opex_pct": 0.22, "growth": 0.03,
+                              "region": {"Americas": 1.0, "Europe": 0.90, "Asia": 0.35, "India": 0.15}},
+    "Hot Runners":           {"base": 35, "cogs_pct": 0.45, "opex_pct": 0.20, "growth": 0.09,
+                              "region": {"Americas": 0.85, "Europe": 1.0, "Asia": 0.60, "India": 0.30}},
+    "Aftermarket & Service": {"base": 42, "cogs_pct": 0.38, "opex_pct": 0.25, "growth": 0.12,
+                              "region": {"Americas": 1.0, "Europe": 0.65, "Asia": 0.40, "India": 0.35}},
+}
+
 
 def _mock_revenue_summary() -> pd.DataFrame:
     rows = []
-    for fy in [2024, 2025]:
+    for fy in [2024, 2025, 2026]:
         for q_idx, q in enumerate(QUARTERS):
             for m in range(q_idx * 3 + 1, q_idx * 3 + 4):
                 for bu in BUS:
+                    p = _BU_PROFILES[bu]
+                    yr_trend = (1 + p["growth"]) ** (fy - 2023)
                     for region in REGIONS:
-                        base = {"Injection Molding": 80, "Extrusion": 45,
-                                "Hot Runners": 25, "Aftermarket & Service": 35}[bu]
-                        rm = {"Americas": 1.0, "Europe": 0.7, "Asia": 0.45, "India": 0.25}[region]
-                        rev = base * rm * np.random.uniform(0.9, 1.1) * 1e6
+                        rm = p["region"].get(region, 0.3)
+                        rev = p["base"] * rm * yr_trend * np.random.uniform(0.88, 1.12) * 1e6
+                        yoy = p["growth"] * 100 + np.random.uniform(-3, 5)
+                        bv = np.random.uniform(-4, 8) * (1 if bu != "Extrusion" else -0.5)
                         rows.append({
                             "business_unit": bu, "region": region,
                             "fiscal_year": fy, "fiscal_quarter": q,
                             "fiscal_month": m, "scenario_name": "Actual",
                             "revenue_usd": round(rev, 2),
-                            # Keep alias parity with view SQL that selects
-                            # SUM(revenue_usd) AS revenue.
                             "revenue": round(rev, 2),
-                            "yoy_growth_pct": round(np.random.uniform(-5, 15), 1),
-                            "budget_variance_pct": round(np.random.uniform(-8, 10), 1),
+                            "yoy_growth_pct": round(yoy, 1),
+                            "budget_variance_pct": round(bv, 1),
                         })
     return pd.DataFrame(rows)
 
 
 def _mock_ebitda_bridge() -> pd.DataFrame:
     rows = []
-    for fy in [2024, 2025]:
+    for fy in [2024, 2025, 2026]:
         for q in QUARTERS:
             for bu in BUS:
+                p = _BU_PROFILES[bu]
+                yr_trend = (1 + p["growth"]) ** (fy - 2023)
                 for region in REGIONS:
-                    rev = np.random.uniform(20, 80) * 1e6
-                    cogs = rev * np.random.uniform(0.55, 0.68)
-                    opex = rev * np.random.uniform(0.12, 0.20)
+                    rm = p["region"].get(region, 0.3)
+                    rev = p["base"] * rm * yr_trend * np.random.uniform(0.9, 1.1) * 1e6
+                    cogs = rev * p["cogs_pct"] * np.random.uniform(0.95, 1.05)
+                    opex = rev * p["opex_pct"] * np.random.uniform(0.92, 1.08)
                     gp = rev - cogs
                     ebitda = gp - opex
                     rows.append({
@@ -186,6 +200,8 @@ def _mock_ml_forecast() -> pd.DataFrame:
                 pred = np.random.uniform(10, 60) * 1e6
                 rows.append({
                     "entity_id": f"E-{bu[:3]}-{region[:3]}",
+                    "business_unit": bu,
+                    "region": region,
                     "product_family": "Mixed",
                     "forecast_month": m,
                     "predicted_revenue": round(pred, 2),

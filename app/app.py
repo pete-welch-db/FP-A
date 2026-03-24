@@ -6,17 +6,28 @@ import streamlit as st
 from importlib import import_module
 from pathlib import Path
 
+from config import BRAND_CONFIG
+
+_ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+_DATABRICKS_LOGO = _ASSETS_DIR / "Databricks_Logo.png"
+_MILACRON_LOGO = _ASSETS_DIR / "Milacron_Logo.png"
+
+_brand_name = st.session_state.get("brand", "Nova Molding Systems")
+_page_title = BRAND_CONFIG.get(_brand_name, BRAND_CONFIG["Nova Molding Systems"])["page_title"]
+
 st.set_page_config(
-    page_title="Nova Molding Systems FP&A",
+    page_title=_page_title,
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-_ASSETS_DIR = Path(__file__).resolve().parent / "assets"
-_DATABRICKS_LOGO = _ASSETS_DIR / "Databricks_Logo.png"
-
-st.logo(str(_DATABRICKS_LOGO), size="large")
+_sidebar_logo = _MILACRON_LOGO if _brand_name == "Milacron" and _MILACRON_LOGO.exists() else _DATABRICKS_LOGO
+with st.sidebar:
+    try:
+        st.image(str(_sidebar_logo), use_container_width=True)
+    except TypeError:
+        st.image(str(_sidebar_logo))
 
 st.markdown(
     """
@@ -24,16 +35,6 @@ st.markdown(
     /* Minimize top padding on all pages */
     section.main > div.block-container {
         padding-top: 1rem !important;
-    }
-    /* Enlarge the sidebar logo */
-    [data-testid="stLogo"] {
-        height: auto !important;
-        max-height: none !important;
-        padding-bottom: 1rem;
-    }
-    [data-testid="stLogo"] img {
-        max-height: 80px !important;
-        width: auto !important;
     }
     /* Stretch nav to fill sidebar so Settings can pin to bottom */
     [data-testid="stSidebarNav"] {

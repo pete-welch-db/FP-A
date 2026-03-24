@@ -46,34 +46,37 @@ def render():
 
     st.markdown("---")
 
-    # Margin trend by quarter
+    # Margin trend by BU and quarter — line chart
     st.subheader("EBITDA Margin Trend by Quarter")
     margin_df = run_query(f"""
-        SELECT fiscal_quarter,
-               SUM(ebitda) / NULLIF(SUM(revenue), 0) AS margin
+        SELECT business_unit, fiscal_quarter,
+               SUM(ebitda) / NULLIF(SUM(revenue), 0) AS ebitda_margin
         FROM {fq('gold_ebitda_bridge')}
         WHERE business_unit IN ({bu_filter})
           AND region IN ({region_filter})
           AND fiscal_year = {fy}
           AND scenario_name = '{scenario}'
-        GROUP BY fiscal_quarter ORDER BY fiscal_quarter
+        GROUP BY business_unit, fiscal_quarter ORDER BY fiscal_quarter
     """, mock_key="ebitda_bridge")
 
-    if not margin_df.empty:
+    if not margin_df.empty and "ebitda_margin" in margin_df.columns:
         fig = px.line(
-            margin_df, x="fiscal_quarter", y="margin",
-            markers=True, title="Quarterly EBITDA Margin",
-            color_discrete_sequence=["#1565C0"],
+            margin_df, x="fiscal_quarter", y="ebitda_margin", color="business_unit",
+            markers=True, title="Quarterly EBITDA Margin by BU",
+            color_discrete_sequence=px.colors.qualitative.Set2,
         )
-        fig.update_layout(template="plotly_white", yaxis_tickformat=".1%")
+        fig.update_layout(template="plotly_white", yaxis_tickformat=".1%",
+                          yaxis_title="EBITDA Margin")
         st.plotly_chart(fig, use_container_width=True)
 
-    # BU comparison
+    st.markdown("---")
+
+    # BU comparison — side-by-side
     st.subheader("EBITDA by Business Unit")
     bu_df = run_query(f"""
         SELECT business_unit,
                SUM(revenue) AS revenue, SUM(ebitda) AS ebitda,
-               SUM(ebitda) / NULLIF(SUM(revenue), 0) AS margin
+               SUM(ebitda) / NULLIF(SUM(revenue), 0) AS ebitda_margin
         FROM {fq('gold_ebitda_bridge')}
         WHERE business_unit IN ({bu_filter})
           AND region IN ({region_filter})
@@ -87,16 +90,19 @@ def render():
         with col1:
             fig = px.bar(
                 bu_df, x="business_unit", y="ebitda",
-                title="EBITDA by BU",
-                color_discrete_sequence=["#2E7D32"],
+                title="EBITDA by BU", color="business_unit",
+                color_discrete_sequence=px.colors.qualitative.Set2,
             )
-            fig.update_layout(template="plotly_white")
+            fig.update_layout(template="plotly_white", yaxis_title="EBITDA (USD)",
+                              showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
-        with col2:
-            fig = px.bar(
-                bu_df, x="business_unit", y="margin",
-                title="EBITDA Margin by BU",
-                color_discrete_sequence=["#FF6F00"],
-            )
-            fig.update_layout(template="plotly_white", yaxis_tickformat=".1%")
-            st.plotly_chart(fig, use_container_width=True)
+        if "ebitda_margin" in bu_df.columns:
+            with col2:
+                fig = px.bar(
+                    bu_df, x="business_unit", y="ebitda_margin",
+                    title="EBITDA Margin by BU", color="business_unit",
+                    color_discrete_sequence=px.colors.qualitative.Set2,
+                )
+                fig.update_layout(template="plotly_white", yaxis_tickformat=".1%",
+                                  yaxis_title="EBITDA Margin", showlegend=False)
+                st.plotly_chart(fig, use_container_width=True)

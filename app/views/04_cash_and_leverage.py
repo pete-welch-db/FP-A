@@ -26,7 +26,7 @@ def render():
                SUM(operating_cf) AS operating_cf,
                SUM(capex) AS capex,
                SUM(fcf) AS fcf,
-               AVG(fcf_conversion_pct) AS fcf_conv
+               AVG(fcf_conversion_pct) AS fcf_conversion_pct
         FROM {fq('gold_cash_flow_summary')}
         WHERE fiscal_year = {fy}
         GROUP BY fiscal_quarter ORDER BY fiscal_quarter
@@ -95,8 +95,8 @@ def render():
     wc_df = run_query(f"""
         SELECT business_unit, region,
                AVG(dso) AS dso, AVG(dpo) AS dpo,
-               AVG(inventory_turns) AS inv_turns,
-               AVG(cash_conversion_cycle) AS ccc
+               AVG(inventory_turns) AS inventory_turns,
+               AVG(cash_conversion_cycle) AS cash_conversion_cycle
         FROM {fq('gold_working_capital')}
         WHERE business_unit IN ({bu_filter})
           AND region IN ({region_filter})
@@ -112,12 +112,12 @@ def render():
         with c2:
             render_kpi_card("Avg DPO", f"{wc_df['dpo'].mean():.0f} days")
         with c3:
-            render_kpi_card("Avg Inventory Turns", f"{wc_df['inv_turns'].mean():.1f}x")
+            render_kpi_card("Avg Inventory Turns", f"{wc_df['inventory_turns'].mean():.1f}x")
 
         st.dataframe(
             wc_df.style.format({
                 "dso": "{:.0f}", "dpo": "{:.0f}",
-                "inv_turns": "{:.1f}", "ccc": "{:.0f}",
+                "inventory_turns": "{:.1f}", "cash_conversion_cycle": "{:.0f}",
             }),
             use_container_width=True,
         )
